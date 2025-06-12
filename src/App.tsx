@@ -36,7 +36,6 @@ function AppRoutes() {
       <Route path="/auth" element={
         !user ? (
           <div className="min-h-screen bg-background antialiased">
-            <Navbar />
             <AuthPage />
           </div>
         ) : <Navigate to="/dashboard" replace />

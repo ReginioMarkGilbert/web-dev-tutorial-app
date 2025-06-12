@@ -1,4 +1,3 @@
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -9,11 +8,11 @@ export default function LandingPage() {
       <section className="w-full py-20 bg-background">
         <div className="container mx-auto px-4 md:px-6 max-w-6xl">
           <div className="flex flex-col items-center text-center space-y-4">
-            <Badge className="px-3 py-1 text-sm" variant="outline">
-              Learn Web3 Development
-            </Badge>
+            {/* <Badge className="px-3 py-1 text-sm" variant="outline">
+              Learn Web Development
+            </Badge> */}
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-              Master Frontend Web3 Development
+              Master Frontend Development
             </h1>
             <p className="max-w-[700px] text-muted-foreground md:text-xl">
               Learn to build decentralized applications with modern tools and frameworks.
