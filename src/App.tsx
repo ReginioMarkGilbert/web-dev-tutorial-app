@@ -1,10 +1,11 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
 import { Toaster } from "sonner"
-import { Navbar } from "./components/Navbar"
+import Navbar from "./components/Navbar"
 import { ThemeProvider } from "./components/theme-provider"
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import "./index.css"
 import AuthPage from "./pages/AuthPage"
+import DashboardPage from "./pages/DashboardPage"
 import LandingPage from "./pages/LandingPage"
 
 // Protected route component
@@ -44,10 +45,7 @@ function AppRoutes() {
         <ProtectedRoute>
           <div className="min-h-screen bg-background antialiased">
             <Navbar />
-            <div className="container mx-auto px-4 py-8 max-w-6xl">
-              <h1 className="text-3xl font-bold">Dashboard</h1>
-              <p className="mt-4">Welcome to your Web3 Tutorial Dashboard</p>
-            </div>
+            <DashboardPage />
           </div>
         </ProtectedRoute>
       } />

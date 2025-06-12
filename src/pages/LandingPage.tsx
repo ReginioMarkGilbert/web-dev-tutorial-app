@@ -1,3 +1,4 @@
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -8,15 +9,15 @@ export default function LandingPage() {
       <section className="w-full py-20 bg-background">
         <div className="container mx-auto px-4 md:px-6 max-w-6xl">
           <div className="flex flex-col items-center text-center space-y-4">
-            {/* <Badge className="px-3 py-1 text-sm" variant="outline">
+            <Badge className="px-3 py-1 text-sm" variant="outline">
               Learn Web Development
-            </Badge> */}
+            </Badge>
             <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-              Master Frontend Development
+              Master Frontend Web Development
             </h1>
             <p className="max-w-[700px] text-muted-foreground md:text-xl">
-              Learn to build decentralized applications with modern tools and frameworks.
-              From blockchain basics to advanced frontend patterns.
+              Learn to build modern web applications with industry-standard tools and frameworks.
+              From HTML/CSS basics to advanced JavaScript patterns.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
               <Button size="lg">Get Started</Button>
@@ -33,7 +34,7 @@ export default function LandingPage() {
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Key Topics</h2>
               <p className="max-w-[700px] text-muted-foreground md:text-xl">
-                Our comprehensive curriculum covers everything you need to become a skilled Web3 frontend developer.
+                Our comprehensive curriculum covers everything you need to become a skilled frontend web developer.
               </p>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
@@ -64,7 +65,7 @@ export default function LandingPage() {
             <div className="space-y-2">
               <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">Ready to Get Started?</h2>
               <p className="max-w-[700px] text-muted-foreground md:text-xl">
-                Join thousands of developers building the future of the web with blockchain technology.
+                Join thousands of developers building the future of the web with modern technologies.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-4 mt-8">
@@ -80,7 +81,7 @@ export default function LandingPage() {
         <div className="container mx-auto px-4 md:px-6 max-w-6xl">
           <div className="flex flex-col items-center text-center space-y-4">
             <p className="text-sm text-muted-foreground">
-              © 2023 Web3 Tutorial App. All rights reserved.
+              © 2023 Web Dev Tutorial App. All rights reserved.
             </p>
           </div>
         </div>
@@ -91,39 +92,39 @@ export default function LandingPage() {
 
 const features = [
   {
-    title: "Blockchain Fundamentals",
-    description: "Learn the core concepts of blockchain technology",
-    content: "Understand decentralization, consensus mechanisms, and the blockchain data structure.",
+    title: "HTML & CSS Fundamentals",
+    description: "Learn the core building blocks of web design",
+    content: "Master semantic HTML5 elements, CSS layouts, responsive design, and modern styling techniques.",
     icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><path d="M3 9h18"/><path d="M9 21V9"/></svg>
   },
   {
-    title: "Smart Contract Integration",
-    description: "Connect your frontend to blockchain contracts",
-    content: "Learn to interact with Ethereum and other blockchain networks from your web applications.",
+    title: "JavaScript Mastery",
+    description: "Build dynamic and interactive web applications",
+    content: "Learn modern JavaScript with ES6+ features, asynchronous programming, DOM manipulation, and web APIs.",
     icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
   },
   {
-    title: "Web3 Libraries",
-    description: "Master essential Web3 development tools",
-    content: "Get hands-on experience with ethers.js, web3.js, and other popular libraries for blockchain interaction.",
+    title: "React.js Development",
+    description: "Create modern component-based UIs",
+    content: "Get hands-on experience with React hooks, context API, state management, and building reusable components.",
     icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
   },
   {
-    title: "React for Web3",
-    description: "Build modern UIs for decentralized apps",
-    content: "Learn specialized patterns for managing blockchain state and user interactions in React applications.",
+    title: "Responsive Web Design",
+    description: "Build layouts that work on any device",
+    content: "Learn specialized patterns for creating responsive layouts with Flexbox, CSS Grid, and modern CSS techniques.",
     icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><circle cx="12" cy="12" r="10"/><path d="m4.93 4.93 4.24 4.24"/><path d="m14.83 9.17 4.24-4.24"/><path d="m14.83 14.83 4.24 4.24"/><path d="m9.17 14.83-4.24 4.24"/><circle cx="12" cy="12" r="4"/></svg>
   },
   {
-    title: "Wallet Connections",
-    description: "Implement secure crypto wallet integrations",
-    content: "Authenticate users with MetaMask, WalletConnect, and other popular Web3 wallet providers.",
+    title: "Frontend Tooling",
+    description: "Master the modern development workflow",
+    content: "Implement Vite, Git version control, package managers, and testing frameworks for professional development.",
     icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"/><path d="M3 5v14a2 2 0 0 0 2 2h16v-5"/><path d="M18 12a2 2 0 0 0 0 4h4v-4Z"/></svg>
   },
   {
-    title: "Decentralized Storage",
-    description: "Store data with IPFS and other solutions",
-    content: "Learn how to use decentralized storage systems for your application's data and assets.",
+    title: "APIs & Data Fetching",
+    description: "Connect your frontend to data sources",
+    content: "Learn how to work with REST APIs, fetch data asynchronously, and handle state management with modern patterns.",
     icon: <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><path d="m3.29 7 8.11 4.66c.19.11.41.11.6 0L20.11 7"/><path d="M12 22V12"/></svg>
   }
 ];

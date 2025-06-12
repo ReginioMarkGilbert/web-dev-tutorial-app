@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button"
 import { useAuth } from "@/contexts/AuthContext"
 import { Link, useNavigate } from "react-router-dom"
 
-export function Navbar() {
+export default function Navbar() {
   const { user, signOut } = useAuth()
   const navigate = useNavigate()
 
@@ -31,7 +31,7 @@ export function Navbar() {
             >
               <path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7" />
             </svg>
-            <span className="font-bold">Web3 Tutorials</span>
+            <span className="font-bold">Web Dev Tutorials</span>
           </Link>
           <nav className="hidden md:flex items-center gap-6 text-sm">
             <Link to="/" className="transition-colors hover:text-foreground/80 text-foreground/60">
