@@ -1,12 +1,18 @@
-import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom"
+import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom"
 import { Toaster } from "sonner"
+import ChatButton from "./components/ChatButton"
 import Navbar from "./components/Navbar"
 import { ThemeProvider } from "./components/theme-provider"
 import { AuthProvider, useAuth } from "./contexts/AuthContext"
 import "./index.css"
 import AuthPage from "./pages/AuthPage"
 import DashboardPage from "./pages/DashboardPage"
+import JavaScriptFundamentalsPage from "./pages/JavaScriptFundamentalsPage"
 import LandingPage from "./pages/LandingPage"
+import ProfilePage from "./pages/ProfilePage"
+import ResourcesPage from "./pages/ResourcesPage"
+import TutorialDetailPage from "./pages/TutorialDetailPage"
+import TutorialsPage from "./pages/TutorialsPage"
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -23,6 +29,19 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   return <>{children}</>
 }
 
+// Chat Button wrapper to conditionally render based on route
+const ConditionalChatButton = () => {
+  const location = useLocation()
+  const currentPath = location.pathname
+
+  // Hide on landing page and auth page
+  if (currentPath === '/' || currentPath === '/auth') {
+    return null
+  }
+
+  return <ChatButton />
+}
+
 function AppRoutes() {
   const { user } = useAuth()
 
@@ -30,7 +49,6 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={
         <div className="min-h-screen bg-background antialiased">
-          <Navbar />
           <LandingPage />
         </div>
       } />
@@ -49,6 +67,40 @@ function AppRoutes() {
           </div>
         </ProtectedRoute>
       } />
+      <Route path="/javascript-fundamentals" element={
+        <ProtectedRoute>
+          <div className="min-h-screen bg-background antialiased">
+            <Navbar />
+            <JavaScriptFundamentalsPage />
+          </div>
+        </ProtectedRoute>
+      } />
+      <Route path="/profile" element={
+        <ProtectedRoute>
+          <div className="min-h-screen bg-background antialiased">
+            <Navbar />
+            <ProfilePage />
+          </div>
+        </ProtectedRoute>
+      } />
+      <Route path="/tutorials" element={
+        <div className="min-h-screen bg-background antialiased">
+          <Navbar />
+          <TutorialsPage />
+        </div>
+      } />
+      <Route path="/tutorial/:tutorialId" element={
+        <div className="min-h-screen bg-background antialiased">
+          <Navbar />
+          <TutorialDetailPage />
+        </div>
+      } />
+      <Route path="/resources" element={
+        <div className="min-h-screen bg-background antialiased">
+          <Navbar />
+          <ResourcesPage />
+        </div>
+      } />
     </Routes>
   )
 }
@@ -60,6 +112,7 @@ function App() {
         <AuthProvider>
           <Toaster richColors position="top-right" />
           <AppRoutes />
+          <ConditionalChatButton />
         </AuthProvider>
       </ThemeProvider>
     </BrowserRouter>

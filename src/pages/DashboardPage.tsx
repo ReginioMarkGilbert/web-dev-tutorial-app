@@ -5,6 +5,7 @@ import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/AuthContext"
 import { BookOpen, Code, Database, Flame, Layout, LucideIcon, Rocket, Sparkles, Trophy, Users } from "lucide-react"
+import { Link } from "react-router-dom"
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -140,7 +141,7 @@ interface CourseProps {
 }
 
 function CourseCard({ course, status }: CourseProps) {
-  const { title, description, progress, level, duration, modules, icon: Icon } = course
+  const { title, description, progress, level, duration, modules, icon: Icon, link } = course
 
   return (
     <Card>
@@ -189,9 +190,17 @@ function CourseCard({ course, status }: CourseProps) {
         <Button
           className="w-full"
           variant={status === 'completed' ? 'outline' : 'default'}
+          asChild={!!link}
         >
-          {status === 'inProgress' ? 'Continue' :
-           status === 'completed' ? 'Review Course' : 'Start Learning'}
+          {link ? (
+            <Link to={link}>
+              {status === 'inProgress' ? 'Continue' :
+               status === 'completed' ? 'Review Course' : 'Start Learning'}
+            </Link>
+          ) : (
+            status === 'inProgress' ? 'Continue' :
+            status === 'completed' ? 'Review Course' : 'Start Learning'
+          )}
         </Button>
       </CardFooter>
     </Card>
@@ -231,6 +240,7 @@ interface Course {
   duration: string
   modules: number
   icon: LucideIcon
+  link?: string
 }
 
 interface Event {
@@ -251,7 +261,8 @@ const mockInProgressCourses: Course[] = [
     level: 'Intermediate',
     duration: '8 hours',
     modules: 12,
-    icon: Code
+    icon: Code,
+    link: '/javascript-fundamentals'
   },
   {
     id: '2',

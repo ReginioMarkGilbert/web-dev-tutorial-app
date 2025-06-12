@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 import type { Profile } from '@/types/database'
 import { useEffect, useState } from 'react'
 
-export function useProfile() {
+export default function useProfile() {
   const { user } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [loading, setLoading] = useState(true)

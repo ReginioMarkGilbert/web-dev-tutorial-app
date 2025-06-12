@@ -1,8 +1,10 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/contexts/AuthContext'
+import { motion } from 'framer-motion'
 import { ArrowLeftIcon, EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
@@ -16,6 +18,8 @@ export default function AuthPage() {
   const [error, setError] = useState<string | null>(null)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [rememberMe, setRememberMe] = useState(false)
+  const [activeTab, setActiveTab] = useState('signin')
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
 
@@ -81,32 +85,49 @@ export default function AuthPage() {
   }
 
   return (
-    <div className="flex flex-col justify-center items-center min-h-screen p-4 relative">
+    <div className="flex flex-col justify-center items-center min-h-screen p-4 relative bg-gradient-to-b from-background to-secondary/10">
       <div className="absolute top-8 left-8">
         <Link to="/" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground transition-colors">
           <ArrowLeftIcon className="mr-2 h-4 w-4" />
           Back to Home
         </Link>
       </div>
-      <div className="w-full max-w-md">
-        <Card className="w-full">
-          <Tabs defaultValue="signin" className="w-full">
-            <CardHeader>
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+        className="w-full max-w-md"
+      >
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold tracking-tight">Welcome Back</h1>
+          <p className="text-muted-foreground mt-2">Sign in to your account or create a new one</p>
+        </div>
+
+        <Card className="w-full border-muted/30 shadow-lg">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <CardHeader className="pb-2">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="signin">Sign In</TabsTrigger>
                 <TabsTrigger value="signup">Sign Up</TabsTrigger>
               </TabsList>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-6">
               {error && (
-                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 'auto' }}
+                  exit={{ opacity: 0, height: 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="bg-destructive/10 border border-destructive/20 text-destructive px-4 py-3 rounded-md mb-6"
+                >
                   {error}
-                </div>
+                </motion.div>
               )}
 
               <TabsContent value="signin">
-                <form onSubmit={handleSignIn}>
-                  <div className="space-y-4">
+                <form onSubmit={handleSignIn} className="space-y-5">
+                  <div className="space-y-3">
                     <div className="space-y-2">
                       <label htmlFor="email" className="text-sm font-medium">Email</label>
                       <Input
@@ -115,11 +136,17 @@ export default function AuthPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
+                        className="h-11"
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <label htmlFor="password" className="text-sm font-medium">Password</label>
+                      <div className="flex justify-between items-center">
+                        <label htmlFor="password" className="text-sm font-medium">Password</label>
+                        <Link to="#" className="text-xs text-primary hover:underline">
+                          Forgot password?
+                        </Link>
+                      </div>
                       <div className="relative">
                         <Input
                           id="password"
@@ -127,6 +154,7 @@ export default function AuthPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Enter your password"
+                          className="h-11"
                           required
                         />
                         <Button
@@ -145,23 +173,49 @@ export default function AuthPage() {
                         </Button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Signing in...
-                        </>
-                      ) : (
-                        'Sign In'
-                      )}
-                    </Button>
+
+                    <div className="flex items-center space-x-2 pt-1">
+                      <Checkbox
+                        id="remember-me"
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                      />
+                      <label
+                        htmlFor="remember-me"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                      >
+                        Remember me
+                      </label>
+                    </div>
+                  </div>
+
+                  <Button type="submit" className="w-full h-11" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Signing in...
+                      </>
+                    ) : (
+                      'Sign In'
+                    )}
+                  </Button>
+
+                  <div className="text-center text-sm">
+                    <span className="text-muted-foreground">Don't have an account? </span>
+                    <button
+                      type="button"
+                      className="text-primary hover:underline font-medium"
+                      onClick={() => setActiveTab('signup')}
+                    >
+                      Sign up
+                    </button>
                   </div>
                 </form>
               </TabsContent>
 
               <TabsContent value="signup">
-                <form onSubmit={handleSignUp}>
-                  <div className="space-y-4">
+                <form onSubmit={handleSignUp} className="space-y-5">
+                  <div className="space-y-3">
                     <div className="space-y-2">
                       <label htmlFor="email-signup" className="text-sm font-medium">Email</label>
                       <Input
@@ -170,6 +224,7 @@ export default function AuthPage() {
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="Enter your email"
+                        className="h-11"
                         required
                       />
                     </div>
@@ -182,6 +237,7 @@ export default function AuthPage() {
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="Create a password"
+                          className="h-11"
                           required
                         />
                         <Button
@@ -209,6 +265,7 @@ export default function AuthPage() {
                           value={confirmPassword}
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           placeholder="Confirm your password"
+                          className="h-11"
                           required
                         />
                         <Button
@@ -227,26 +284,38 @@ export default function AuthPage() {
                         </Button>
                       </div>
                     </div>
-                    <Button type="submit" className="w-full" disabled={isLoading}>
-                      {isLoading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Signing up...
-                        </>
-                      ) : (
-                        'Sign Up'
-                      )}
-                    </Button>
+                  </div>
+
+                  <Button type="submit" className="w-full h-11" disabled={isLoading}>
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Creating account...
+                      </>
+                    ) : (
+                      'Create Account'
+                    )}
+                  </Button>
+
+                  <div className="text-center text-sm">
+                    <span className="text-muted-foreground">Already have an account? </span>
+                    <button
+                      type="button"
+                      className="text-primary hover:underline font-medium"
+                      onClick={() => setActiveTab('signin')}
+                    >
+                      Sign in
+                    </button>
                   </div>
                 </form>
               </TabsContent>
             </CardContent>
-            <CardFooter className="flex justify-center text-sm text-muted-foreground">
-              <p>By continuing, you agree to our Terms of Service and Privacy Policy.</p>
+            <CardFooter className="flex justify-center text-xs text-muted-foreground pb-6 px-8 text-center">
+              <p>By continuing, you agree to our <Link to="#" className="underline hover:text-primary">Terms of Service</Link> and <Link to="#" className="underline hover:text-primary">Privacy Policy</Link>.</p>
             </CardFooter>
           </Tabs>
         </Card>
-      </div>
+      </motion.div>
     </div>
   )
 }

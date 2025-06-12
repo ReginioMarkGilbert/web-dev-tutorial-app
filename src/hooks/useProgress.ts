@@ -3,7 +3,7 @@ import { supabase } from '@/lib/supabase'
 import type { UserProgress } from '@/types/database'
 import { useEffect, useState } from 'react'
 
-export function useProgress(tutorialId?: string) {
+export default function useProgress(tutorialId?: string) {
   const { user } = useAuth()
   const [progress, setProgress] = useState<UserProgress | null>(null)
   const [loading, setLoading] = useState(true)
