@@ -3,6 +3,11 @@ export interface Profile {
   username: string;
   created_at: string;
   updated_at: string;
+  full_name?: string;
+  avatar_url?: string;
+  website?: string;
+  github?: string;
+  bio?: string;
 }
 
 export interface UserProgress {
@@ -14,6 +19,10 @@ export interface UserProgress {
   last_accessed: string;
   created_at: string;
   updated_at: string;
+  overall_percentage?: number;
+  javascript_completed?: number;
+  react_completed?: number;
+  html_css_completed?: number;
 }
 
 export type Tables = {
