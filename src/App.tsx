@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom"
-import { Toaster } from "sonner"
+import { toast, Toaster } from "sonner"
 import ChatButton from "./components/ChatButton"
 import Navbar from "./components/Navbar"
 import { ThemeProvider } from "./components/theme-provider"
@@ -13,6 +13,7 @@ import ProfilePage from "./pages/ProfilePage"
 import ResourcesPage from "./pages/ResourcesPage"
 import TutorialDetailPage from "./pages/TutorialDetailPage"
 import TutorialsPage from "./pages/TutorialsPage"
+import NotFound from './pages/NotFound'
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -23,6 +24,7 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   }
 
   if (!user) {
+    toast.error("You must be logged in to access this page.")
     return <Navigate to="/auth" replace />
   }
 
@@ -101,6 +103,7 @@ function AppRoutes() {
           <ResourcesPage />
         </div>
       } />
+      <Route path='*' element={<NotFound />}/>
     </Routes>
   )
 }
