@@ -1,57 +1,105 @@
-# Web3 Tutorial App
+# Web Dev Tutorial App
 
-A comprehensive platform for learning web3 development fundamentals with a focus on frontend technologies.
+A comprehensive web development tutorial application with a React frontend and Express + Prisma backend.
 
-## Features
+## Project Structure
 
-- Modern UI built with React, TypeScript, and Tailwind CSS
-- Authentication with Supabase
-- Dark/light mode theming
-- Responsive design
-- Interactive tutorials for web3 development
+The project is organized into two main parts:
+
+1. **Frontend** (root directory)
+   - React + TypeScript + Vite
+   - Tailwind CSS for styling
+   - React Router for navigation
+
+2. **Backend** (`/server` directory)
+   - Express.js REST API
+   - Prisma ORM with PostgreSQL
+   - JWT authentication
 
 ## Getting Started
 
 ### Prerequisites
 
-- Node.js 16+ and npm
-- Supabase account (for authentication)
+- Node.js (v14+)
+- PostgreSQL database
 
-### Installation
+### Setting up the Backend
 
-1. Clone the repository
-   ```bash
-   git clone https://github.com/yourusername/web3-tutorial-app.git
-   cd web3-tutorial-app
-   ```
+1. Navigate to the server directory:
 
-2. Install dependencies
-   ```bash
-   npm install
-   ```
+```bash
+cd server
+```
 
-3. Create a `.env` file in the root directory with your Supabase credentials:
-   ```
-   VITE_SUPABASE_URL=your_supabase_url
-   VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-   ```
+2. Install dependencies:
 
-4. Start the development server
-   ```bash
-   npm run dev
-   ```
+```bash
+npm install
+```
 
-## Supabase Setup
+3. Create a `.env` file with your PostgreSQL connection details and JWT secret:
 
-1. Create a new project at [supabase.com](https://supabase.com)
-2. Go to the Authentication section and enable Email auth provider
-3. Configure password requirements in Authentication > Providers > Email
-4. Copy your project URL and anon key from Project Settings > API
-5. Paste these values in your `.env` file
+```env
+DATABASE_URL="postgresql://postgres:password@localhost:5432/webdevtutorials?schema=public"
+JWT_SECRET="your-secret-jwt-key"
+JWT_EXPIRES_IN="7d"
+PORT=5000
+CLIENT_URL="http://localhost:5173"
+```
+
+4. Set up the database with Prisma:
+
+```bash
+npm run prisma:generate
+npm run prisma:migrate
+```
+
+5. Start the development server:
+
+```bash
+npm run dev
+```
+
+### Setting up the Frontend
+
+1. From the root directory, install dependencies:
+
+```bash
+npm install
+```
+
+2. Create a `.env` file for your frontend:
+
+```env
+VITE_API_URL="http://localhost:5000/api"
+```
+
+3. Start the development server:
+
+```bash
+npm run dev
+```
+
+## Features
+
+- User authentication (signup, login, profile management)
+- Interactive tutorials on web development topics
+- Progress tracking for users
+- Dark mode support
+- Responsive design
 
 ## Tech Stack
 
-- **Frontend**: React, TypeScript, Vite
-- **Styling**: Tailwind CSS, shadcn/ui
-- **Authentication**: Supabase
-- **Routing**: React Router
+- **Frontend**:
+  - React 18
+  - TypeScript
+  - Tailwind CSS
+  - ShadcnUI components
+  - React Router
+
+- **Backend**:
+  - Node.js
+  - Express
+  - Prisma ORM
+  - PostgreSQL
+  - JWT Authentication

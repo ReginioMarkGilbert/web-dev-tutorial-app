@@ -1,7 +1,9 @@
-import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
-import type { UserProgress } from '@/types/database'
-import { useEffect, useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext';
+import type { UserProgress } from '@/types/database';
+import { useEffect, useState } from 'react';
+
+// API base URL - can be configured through environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function useProgress(tutorialId?: string) {
   const { user } = useAuth()
@@ -10,31 +12,50 @@ export default function useProgress(tutorialId?: string) {
   const [error, setError] = useState<Error | null>(null)
 
   useEffect(() => {
-    if (!user || !tutorialId) {
+    if (!user || !tutorialId)
+    {
       setProgress(null)
       setLoading(false)
       return
     }
 
     async function fetchProgress() {
-      try {
+      try
+      {
         setLoading(true)
-        const { data, error } = await supabase
-          .from('user_progress')
-          .select('*')
-          .eq('user_id', user.id)
-          .eq('tutorial_id', tutorialId)
-          .single()
 
-        if (error && error.code !== 'PGRST116') { // PGRST116 is "no rows returned"
-          throw error
+        const token = localStorage.getItem('token')
+        if (!token)
+        {
+          throw new Error('Not authenticated')
         }
 
-        setProgress(data)
-      } catch (error) {
+        const response = await fetch(`${API_URL}/progress/${user.id}/tutorials/${tutorialId}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        // If 404, it means no progress record exists yet
+        if (response.status === 404)
+        {
+          setProgress(null)
+          return
+        }
+
+        if (!response.ok)
+        {
+          throw new Error('Failed to fetch progress')
+        }
+
+        const data = await response.json()
+        setProgress(data.progress)
+      } catch (error)
+      {
         console.error('Error fetching progress:', error)
         setError(error as Error)
-      } finally {
+      } finally
+      {
         setLoading(false)
       }
     }
@@ -45,52 +66,36 @@ export default function useProgress(tutorialId?: string) {
   async function updateProgress(updates: Partial<Pick<UserProgress, 'completed' | 'progress'>>) {
     if (!user || !tutorialId) return { error: new Error('User not authenticated or tutorial not specified') }
 
-    try {
-      // Check if progress record exists
-      const { data: existingProgress } = await supabase
-        .from('user_progress')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('tutorial_id', tutorialId)
-        .single()
-
-      let result;
-
-      if (existingProgress) {
-        // Update existing record
-        result = await supabase
-          .from('user_progress')
-          .update({
-            ...updates,
-            last_accessed: new Date().toISOString()
-          })
-          .eq('user_id', user.id)
-          .eq('tutorial_id', tutorialId)
-          .select()
-          .single()
-      } else {
-        // Insert new record
-        result = await supabase
-          .from('user_progress')
-          .insert({
-            user_id: user.id,
-            tutorial_id: tutorialId,
-            ...updates,
-            last_accessed: new Date().toISOString()
-          })
-          .select()
-          .single()
+    try
+    {
+      const token = localStorage.getItem('token')
+      if (!token)
+      {
+        throw new Error('Not authenticated')
       }
 
-      const { data, error } = result
+      const response = await fetch(`${API_URL}/progress/${user.id}/tutorials/${tutorialId}`, {
+        method: progress ? 'PATCH' : 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          ...updates,
+          last_accessed: new Date().toISOString()
+        })
+      })
 
-      if (error) {
-        throw error
+      if (!response.ok)
+      {
+        throw new Error('Failed to update progress')
       }
 
-      setProgress(data)
-      return { data, error: null }
-    } catch (error) {
+      const data = await response.json()
+      setProgress(data.progress)
+      return { data: data.progress, error: null }
+    } catch (error)
+    {
       console.error('Error updating progress:', error)
       return { data: null, error }
     }
@@ -99,19 +104,29 @@ export default function useProgress(tutorialId?: string) {
   async function getAllProgress() {
     if (!user) return { data: null, error: new Error('User not authenticated') }
 
-    try {
-      const { data, error } = await supabase
-        .from('user_progress')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('last_accessed', { ascending: false })
-
-      if (error) {
-        throw error
+    try
+    {
+      const token = localStorage.getItem('token')
+      if (!token)
+      {
+        throw new Error('Not authenticated')
       }
 
-      return { data, error: null }
-    } catch (error) {
+      const response = await fetch(`${API_URL}/progress/${user.id}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      })
+
+      if (!response.ok)
+      {
+        throw new Error('Failed to fetch all progress')
+      }
+
+      const data = await response.json()
+      return { data: data.progress, error: null }
+    } catch (error)
+    {
       console.error('Error fetching all progress:', error)
       return { data: null, error }
     }

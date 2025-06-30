@@ -1,0 +1,42 @@
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Build output
+dist/
+build/
+out/
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Prisma
+prisma/migrations/*_shadow_*
+.prisma/
+prisma/.env
+
+# Coverage directory
+coverage/
+
+# IDE files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store

@@ -1,9 +1,12 @@
-import { supabase } from '@/lib/supabase'
-import type { Session, User } from '@supabase/supabase-js'
 import { createContext, useContext, useEffect, useState } from 'react'
 
+// Define User type without relying on Supabase
+export type User = {
+   id: string
+   email: string | null
+}
+
 type AuthContextType = {
-   session: Session | null
    user: User | null
    loading: boolean
    isSigningOut: boolean
@@ -20,118 +23,144 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+// API base URL - can be configured through environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-   const [session, setSession] = useState<Session | null>(null)
    const [user, setUser] = useState<User | null>(null)
    const [loading, setLoading] = useState(true)
    const [isSigningOut, setIsSigningOut] = useState(false)
 
+   // Check if user is authenticated on initial load
    useEffect(() => {
-      const setData = async () => {
-         const { data: { session }, error } = await supabase.auth.getSession()
-         if (error) console.log(error)
-         else {
-            setSession(session)
-            setUser(session?.user ?? null)
-         }
-         setLoading(false)
-      }
+      const fetchCurrentUser = async () => {
+         const token = localStorage.getItem('token')
 
-      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-         console.log('Auth state changed:', event)
-         setSession(session)
-         setUser(session?.user ?? null)
-
-         if (event === 'SIGNED_OUT') {
-            // Make sure user state is cleared on sign out
-            setUser(null)
-            setSession(null)
-
-            // Use a short timeout to ensure isSigningOut is still true during navigation
-            // but reset it shortly afterwards to prevent issues on future auth checks
-            setTimeout(() => setIsSigningOut(false), 1000)
-         }
-      })
-
-      setData()
-
-      return () => {
-         subscription.unsubscribe()
-      }
-   }, [])
-
-   const createProfile = async (userId: string, email: string) => {
-      try {
-         // We need to use the service role key for this operation to bypass RLS
-         // First let's check if a profile already exists
-         const { data: existingProfile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', userId)
-            .single()
-
-         if (existingProfile) {
-            console.log('Profile already exists, skipping creation')
+         if (!token)
+         {
+            setLoading(false)
             return
          }
 
-         // Use RPC function to create profile instead of direct insert
-         // This requires creating a database function with security definer privilege
-         const { error } = await supabase.rpc('create_profile', {
-            user_id: userId,
-            user_email: email
-         })
+         try
+         {
+            const response = await fetch(`${API_URL}/auth/me`, {
+               headers: {
+                  'Authorization': `Bearer ${token}`
+               }
+            })
 
-         if (error) console.error('Error creating profile:', error)
-      } catch (error) {
-         console.error('Error creating profile:', error)
+            if (response.ok)
+            {
+               const data = await response.json()
+               setUser({
+                  id: data.user.id,
+                  email: data.user.email
+               })
+            } else
+            {
+               // Token might be invalid or expired
+               localStorage.removeItem('token')
+            }
+         } catch (error)
+         {
+            console.error('Error fetching current user:', error)
+            localStorage.removeItem('token')
+         } finally
+         {
+            setLoading(false)
+         }
       }
-   }
+
+      fetchCurrentUser()
+   }, [])
 
    const signUp = async (email: string, password: string) => {
-      const response = await supabase.auth.signUp({
-         email,
-         password,
-         options: {
-            data: {
-               username: email
-            }
+      try
+      {
+         const response = await fetch(`${API_URL}/auth/signup`, {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+         })
+
+         const data = await response.json()
+
+         if (!response.ok)
+         {
+            return { data: null, error: data.message || 'Signup failed' }
          }
-      })
 
-      if (response.data.user && !response.error) {
-         // We don't need to create a profile here as we'll set up a database trigger
-         // to handle profile creation when a new user signs up
-         // See migration notes below
+         // Store token and set user
+         localStorage.setItem('token', data.token)
+         setUser({
+            id: data.user.id,
+            email: data.user.email
+         })
+
+         return { data, error: null }
+      } catch (error)
+      {
+         console.error('Signup error:', error)
+         return { data: null, error: 'An unexpected error occurred' }
       }
-
-      return response
    }
 
    const signIn = async (email: string, password: string) => {
-      return supabase.auth.signInWithPassword({ email, password })
+      try
+      {
+         const response = await fetch(`${API_URL}/auth/signin`, {
+            method: 'POST',
+            headers: {
+               'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ email, password })
+         })
+
+         const data = await response.json()
+
+         if (!response.ok)
+         {
+            return { data: null, error: data.message || 'Login failed' }
+         }
+
+         // Store token and set user
+         localStorage.setItem('token', data.token)
+         setUser({
+            id: data.user.id,
+            email: data.user.email
+         })
+
+         return { data, error: null }
+      } catch (error)
+      {
+         console.error('Login error:', error)
+         return { data: null, error: 'An unexpected error occurred' }
+      }
    }
 
    const signOut = async () => {
-      try {
+      try
+      {
          setIsSigningOut(true)
-         const { error } = await supabase.auth.signOut()
-         if (error) {
-            console.error('Error signing out:', error)
-            setIsSigningOut(false) // Reset flag if there's an error
-            throw error
-         }
-         // The rest of the state cleanup happens in the onAuthStateChange handler
-         // Don't reset isSigningOut here, let the auth state change event handle it
-      } catch (error) {
+
+         // Clear token and user state
+         localStorage.removeItem('token')
+         setUser(null)
+
+         // Use a short timeout to ensure isSigningOut is still true during navigation
+         setTimeout(() => setIsSigningOut(false), 1000)
+      } catch (error)
+      {
          console.error('Error during sign out:', error)
-         setIsSigningOut(false) // Reset flag if there's an exception
+         setIsSigningOut(false)
          throw error
       }
    }
 
    const value = {
-      session,
       user,
       loading,
       isSigningOut,
@@ -145,40 +174,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
 export function useAuth() {
    const context = useContext(AuthContext)
-   if (context === undefined) {
+   if (context === undefined)
+   {
       throw new Error('useAuth must be used within an AuthProvider')
    }
    return context
 }
-
-/*
-Migration notes for Supabase:
-
-Create this SQL function to handle profile creation with security definer privilege:
-
-CREATE OR REPLACE FUNCTION public.create_profile(user_id UUID, user_email TEXT)
-RETURNS VOID AS $$
-BEGIN
-   INSERT INTO public.profiles (id, username)
-   VALUES (user_id, user_email)
-   ON CONFLICT (id) DO NOTHING;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-Or set up a trigger to automatically create profiles when users sign up:
-
-CREATE OR REPLACE FUNCTION public.handle_new_user()
-RETURNS TRIGGER AS $$
-BEGIN
-   INSERT INTO public.profiles (id, username)
-   VALUES (NEW.id, NEW.email)
-   ON CONFLICT (id) DO NOTHING;
-   RETURN NEW;
-END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
-
-CREATE TRIGGER on_auth_user_created
-   AFTER INSERT ON auth.users
-   FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-
-*/

@@ -1,0 +1,76 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User model for authentication
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String  // Will be hashed
+  createdAt     DateTime       @default(now()) @map("created_at")
+  updatedAt     DateTime       @updatedAt @map("updated_at")
+  profile       Profile?
+  userProgress  UserProgress[]
+
+  @@map("users")
+}
+
+// Profile model matching previous Supabase structure
+model Profile {
+  id         String   @id
+  username   String
+  fullName   String?  @map("full_name")
+  avatarUrl  String?  @map("avatar_url")
+  website    String?
+  github     String?
+  bio        String?
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+  user       User     @relation(fields: [id], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// UserProgress model matching previous Supabase structure
+model UserProgress {
+  id                  String   @id @default(uuid())
+  userId              String   @map("user_id")
+  tutorialId          String   @map("tutorial_id")
+  completed           Boolean  @default(false)
+  progress            Int      @default(0)
+  lastAccessed        DateTime @default(now()) @map("last_accessed")
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+  overallPercentage   Int?     @map("overall_percentage")
+  javascriptCompleted Int?     @map("javascript_completed")
+  reactCompleted      Int?     @map("react_completed")
+  htmlCssCompleted    Int?     @map("html_css_completed")
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, tutorialId])
+  @@map("user_progress")
+}
+
+// Tutorial model (wasn't in the existing schema but implied)
+model Tutorial {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String
+  content     String
+  category    String
+  difficulty  String
+  imageUrl    String?  @map("image_url")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("tutorials")
+}

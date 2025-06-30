@@ -1,7 +1,9 @@
-import { useAuth } from '@/contexts/AuthContext'
-import { supabase } from '@/lib/supabase'
-import type { Profile } from '@/types/database'
-import { useEffect, useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext';
+import type { Profile } from '@/types/database';
+import { useEffect, useState } from 'react';
+
+// API base URL - can be configured through environment variables
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export default function useProfile() {
   const { user } = useAuth()
@@ -11,29 +13,42 @@ export default function useProfile() {
 
   useEffect(() => {
     async function fetchProfile() {
-      if (!user) {
+      if (!user)
+      {
         setProfile(null)
         setLoading(false)
         return
       }
 
-      try {
+      try
+      {
         setLoading(true)
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single()
 
-        if (error) {
-          throw error
+        const token = localStorage.getItem('token')
+        if (!token)
+        {
+          throw new Error('Not authenticated')
         }
 
-        setProfile(data)
-      } catch (error) {
+        const response = await fetch(`${API_URL}/profiles/${user.id}`, {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        })
+
+        if (!response.ok)
+        {
+          throw new Error('Failed to fetch profile')
+        }
+
+        const data = await response.json()
+        setProfile(data.profile)
+      } catch (error)
+      {
         console.error('Error fetching profile:', error)
         setError(error as Error)
-      } finally {
+      } finally
+      {
         setLoading(false)
       }
     }
@@ -44,21 +59,33 @@ export default function useProfile() {
   async function updateProfile(updates: Partial<Omit<Profile, 'id' | 'created_at' | 'updated_at'>>) {
     if (!user) return { error: new Error('User not authenticated') }
 
-    try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .update(updates)
-        .eq('id', user.id)
-        .select()
-        .single()
-
-      if (error) {
-        throw error
+    try
+    {
+      const token = localStorage.getItem('token')
+      if (!token)
+      {
+        throw new Error('Not authenticated')
       }
 
-      setProfile(data)
-      return { data, error: null }
-    } catch (error) {
+      const response = await fetch(`${API_URL}/profiles/${user.id}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(updates)
+      })
+
+      if (!response.ok)
+      {
+        throw new Error('Failed to update profile')
+      }
+
+      const data = await response.json()
+      setProfile(data.profile)
+      return { data: data.profile, error: null }
+    } catch (error)
+    {
       console.error('Error updating profile:', error)
       return { data: null, error }
     }
