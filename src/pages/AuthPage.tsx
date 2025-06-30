@@ -6,8 +6,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/contexts/AuthContext'
 import { motion } from 'framer-motion'
 import { ArrowLeftIcon, EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react'
-import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 export default function AuthPage() {
@@ -22,6 +22,14 @@ export default function AuthPage() {
   const [activeTab, setActiveTab] = useState('signin')
   const { signIn, signUp } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+
+  // Show login required message if user was redirected from a protected route
+  useEffect(() => {
+    if (location.state?.showLoginRequired) {
+      toast.error("You must be logged in to access this page.")
+    }
+  }, [location.state])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,7 +46,9 @@ export default function AuthPage() {
         id: loadingToast,
       })
 
-      navigate('/dashboard')
+      // Navigate to the originally requested page or dashboard
+      const redirectTo = location.state?.from || '/dashboard'
+      navigate(redirectTo)
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to sign in'
       setError(errorMessage)
@@ -72,7 +82,9 @@ export default function AuthPage() {
         id: loadingToast,
       })
 
-      navigate('/dashboard')
+      // Navigate to the originally requested page or dashboard
+      const redirectTo = location.state?.from || '/dashboard'
+      navigate(redirectTo)
     } catch (err: any) {
       const errorMessage = err.message || 'Failed to sign up'
       setError(errorMessage)

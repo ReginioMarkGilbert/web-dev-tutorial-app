@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom"
-import { toast, Toaster } from "sonner"
+import { Toaster } from "sonner"
 import ChatButton from "./components/ChatButton"
 import Navbar from "./components/Navbar"
 import { ThemeProvider } from "./components/theme-provider"
@@ -9,23 +9,24 @@ import AuthPage from "./pages/AuthPage"
 import DashboardPage from "./pages/DashboardPage"
 import JavaScriptFundamentalsPage from "./pages/JavaScriptFundamentalsPage"
 import LandingPage from "./pages/LandingPage"
+import NotFound from './pages/NotFound'
 import ProfilePage from "./pages/ProfilePage"
 import ResourcesPage from "./pages/ResourcesPage"
 import TutorialDetailPage from "./pages/TutorialDetailPage"
 import TutorialsPage from "./pages/TutorialsPage"
-import NotFound from './pages/NotFound'
 
 // Protected route component
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth()
+  const { user, loading, isSigningOut } = useAuth()
+  const location = useLocation()
 
   if (loading) {
     return <div className="flex items-center justify-center min-h-screen">Loading...</div>
   }
 
   if (!user) {
-    toast.error("You must be logged in to access this page.")
-    return <Navigate to="/auth" replace />
+    // Don't redirect with showLoginRequired flag if user is signing out
+    return <Navigate to="/auth" state={{ from: location.pathname, showLoginRequired: !isSigningOut }} replace />
   }
 
   return <>{children}</>

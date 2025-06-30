@@ -6,6 +6,7 @@ type AuthContextType = {
    session: Session | null
    user: User | null
    loading: boolean
+   isSigningOut: boolean
    signUp: (email: string, password: string) => Promise<{
       error: any | null
       data: any | null
@@ -23,6 +24,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
    const [session, setSession] = useState<Session | null>(null)
    const [user, setUser] = useState<User | null>(null)
    const [loading, setLoading] = useState(true)
+   const [isSigningOut, setIsSigningOut] = useState(false)
 
    useEffect(() => {
       const setData = async () => {
@@ -44,6 +46,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Make sure user state is cleared on sign out
             setUser(null)
             setSession(null)
+
+            // Use a short timeout to ensure isSigningOut is still true during navigation
+            // but reset it shortly afterwards to prevent issues on future auth checks
+            setTimeout(() => setIsSigningOut(false), 1000)
          }
       })
 
@@ -108,16 +114,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
    const signOut = async () => {
       try {
+         setIsSigningOut(true)
          const { error } = await supabase.auth.signOut()
          if (error) {
             console.error('Error signing out:', error)
+            setIsSigningOut(false) // Reset flag if there's an error
             throw error
          }
-         // Manually clear the user and session state
-         setUser(null)
-         setSession(null)
+         // The rest of the state cleanup happens in the onAuthStateChange handler
+         // Don't reset isSigningOut here, let the auth state change event handle it
       } catch (error) {
          console.error('Error during sign out:', error)
+         setIsSigningOut(false) // Reset flag if there's an exception
          throw error
       }
    }
@@ -126,6 +134,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       session,
       user,
       loading,
+      isSigningOut,
       signUp,
       signIn,
       signOut
