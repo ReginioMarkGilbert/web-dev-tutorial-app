@@ -40,11 +40,29 @@ export const signup = async (req: Request, res: Response) => {
       },
     });
 
-    // Generate token
+    // Generate a JSON Web Token (JWT) for user authentication
+    // JWTs are used to securely transmit information between parties as a JSON object
+
+    // jwt.sign() creates a new token with 3 parameters:
+    // 1. Payload: Contains user data (in this case the user ID)
+    // 2. Secret key: Used to sign the token (from environment variables)
+    // 3. Options object: Contains algorithm and other settings
     const token = jwt.sign(
-      { id: user.id },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      // Payload - only include non-sensitive data
+      { id: user.id }, // User ID is safe to include
+
+      // Secret key - MUST be kept secure and loaded from environment variables
+      // Convert to string to ensure type safety
+      String(process.env.JWT_SECRET),
+
+      // Options object
+      {
+        algorithm: 'HS256' // HMAC-SHA256 signing algorithm - industry standard
+        // Note: Consider adding:
+        // - expiresIn: To limit token lifetime
+        // - audience: To specify intended recipients
+        // - issuer: To specify token creator
+      }
     );
 
     return res.status(201).json({
@@ -87,8 +105,10 @@ export const signin = async (req: Request, res: Response) => {
     // Generate token
     const token = jwt.sign(
       { id: user.id },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
+      String(process.env.JWT_SECRET),
+      {
+        algorithm: 'HS256'
+      }
     );
 
     // Return user without password
@@ -119,12 +139,6 @@ export const getMe = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({
       where: { id: userId },
       include: {
-        profile: true,
-      },
-      select: {
-        id: true,
-        email: true,
-        createdAt: true,
         profile: true,
       },
     });
