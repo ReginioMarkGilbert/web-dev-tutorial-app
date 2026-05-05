@@ -1,6 +1,7 @@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Progress } from "@/components/ui/progress"
 import { Separator } from "@/components/ui/separator"
 import { useAuth } from "@/contexts/AuthContext"
 import useProgress from "@/hooks/useProgress"
@@ -360,7 +361,7 @@ greetShort("Charlie"); // Returns: "Hello, Charlie!"
 export default function TutorialDetailPage() {
   const { tutorialId } = useParams<{ tutorialId: string }>();
   const { user } = useAuth();
-  const { updateProgress } = useProgress(tutorialId);
+  const { progress, updateProgress } = useProgress(tutorialId);
 
   const [tutorial, setTutorial] = useState<TutorialContent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -389,6 +390,39 @@ export default function TutorialDetailPage() {
       setLoading(false);
     }
   }, [tutorialId]);
+
+  useEffect(() => {
+    if (!tutorial || !progress || progress.completed) return;
+
+    const restoredSection = Math.min(
+      tutorial.sections.length - 1,
+      Math.floor((progress.progress / 80) * tutorial.sections.length)
+    );
+
+    if (restoredSection > activeSection) {
+      setActiveSection(restoredSection);
+    }
+  }, [activeSection, progress, tutorial]);
+
+  const saveProgress = async (nextProgress: number, completed = false) => {
+    if (!user) return;
+
+    await updateProgress({
+      completed,
+      progress: nextProgress,
+    });
+  };
+
+  const handleSectionChange = (nextSection: number) => {
+    setActiveSection(nextSection);
+    setQuizMode(false);
+    saveProgress(Math.max(10, Math.round(((nextSection + 1) / tutorial!.sections.length) * 80)));
+  };
+
+  const handleStartQuiz = () => {
+    setQuizMode(true);
+    saveProgress(90);
+  };
 
   const handleQuizSubmit = () => {
     if (!tutorial) return;
@@ -553,7 +587,7 @@ export default function TutorialDetailPage() {
                     key={index}
                     variant={activeSection === index ? "default" : "ghost"}
                     className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => setActiveSection(index)}
+                    onClick={() => handleSectionChange(index)}
                   >
                     <span className="truncate">{section.title}</span>
                   </Button>
@@ -562,7 +596,7 @@ export default function TutorialDetailPage() {
                   <Button
                     variant={quizMode ? "default" : "ghost"}
                     className="w-full justify-start text-left h-auto py-2"
-                    onClick={() => setQuizMode(true)}
+                    onClick={handleStartQuiz}
                   >
                     <span className="truncate">Quiz</span>
                   </Button>
@@ -581,6 +615,15 @@ export default function TutorialDetailPage() {
               <div className="flex items-center gap-2">
                 <BookOpen className="h-4 w-4 text-muted-foreground" />
                 <span className="text-sm">{tutorial.level}</span>
+              </div>
+
+              <Separator />
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="font-medium">Saved progress</span>
+                  <span>{progress?.progress || 0}%</span>
+                </div>
+                <Progress value={progress?.progress || 0} />
               </div>
 
               <Separator />
@@ -650,12 +693,12 @@ export default function TutorialDetailPage() {
                     )}
 
                     {activeSection < tutorial.sections.length - 1 ? (
-                      <Button onClick={() => setActiveSection(activeSection + 1)}>
+                      <Button onClick={() => handleSectionChange(activeSection + 1)}>
                         Next Section
                         <ChevronRight className="ml-2 h-4 w-4" />
                       </Button>
                     ) : (
-                      <Button onClick={() => setQuizMode(true)}>
+                      <Button onClick={handleStartQuiz}>
                         Take Quiz
                         <List className="ml-2 h-4 w-4" />
                       </Button>

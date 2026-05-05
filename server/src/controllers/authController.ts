@@ -3,6 +3,8 @@ import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
 import { prisma } from '../app';
 
+const jwtSecret = () => process.env.JWT_SECRET || 'fallback-secret';
+
 export const signup = async (req: Request, res: Response) => {
   try
   {
@@ -53,7 +55,7 @@ export const signup = async (req: Request, res: Response) => {
 
       // Secret key - MUST be kept secure and loaded from environment variables
       // Convert to string to ensure type safety
-      String(process.env.JWT_SECRET),
+      jwtSecret(),
 
       // Options object
       {
@@ -105,7 +107,7 @@ export const signin = async (req: Request, res: Response) => {
     // Generate token
     const token = jwt.sign(
       { id: user.id },
-      String(process.env.JWT_SECRET),
+      jwtSecret(),
       {
         algorithm: 'HS256'
       }
@@ -152,6 +154,28 @@ export const getMe = async (req: Request, res: Response) => {
   } catch (error)
   {
     console.error('Get me error:', error);
+    return res.status(500).json({ message: 'Internal server error' });
+  }
+};
+
+export const deleteMe = async (req: Request, res: Response) => {
+  try
+  {
+    const userId = req.user?.id;
+
+    if (!userId)
+    {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    await prisma.user.delete({
+      where: { id: userId },
+    });
+
+    return res.status(200).json({ message: 'Account deleted' });
+  } catch (error)
+  {
+    console.error('Delete account error:', error);
     return res.status(500).json({ message: 'Internal server error' });
   }
 };

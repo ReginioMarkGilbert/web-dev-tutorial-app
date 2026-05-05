@@ -43,9 +43,11 @@ export default function JavaScriptFundamentalsPage() {
               <Badge variant="secondary">12 modules</Badge>
               <Badge variant="secondary">5-7 hours</Badge>
             </div>
-            <Button>
-              <Play className="mr-2 h-4 w-4" />
-              Start Learning
+            <Button asChild>
+              <Link to="/tutorial/javascript-variables">
+                <Play className="mr-2 h-4 w-4" />
+                Start Learning
+              </Link>
             </Button>
           </div>
           <p>
@@ -146,11 +148,12 @@ interface TopicProps {
     icon: React.ReactNode
     duration: string
     level: 'beginner' | 'intermediate' | 'advanced'
+    link?: string
   }
 }
 
 function TopicCard({ topic }: TopicProps) {
-  const { title, description, icon, duration, level } = topic
+  const { title, description, icon, duration, level, link } = topic
 
   return (
     <Card>
@@ -176,9 +179,15 @@ function TopicCard({ topic }: TopicProps) {
       </CardContent>
       <CardFooter className="flex justify-between">
         <span className="text-sm text-muted-foreground">{duration}</span>
-        <Button variant="ghost" size="sm" className="gap-1">
-          Start lesson
-          <ChevronRight className="h-4 w-4" />
+        <Button variant="ghost" size="sm" className="gap-1" asChild={!!link} disabled={!link}>
+          {link ? (
+            <Link to={link}>
+              Start lesson
+              <ChevronRight className="h-4 w-4" />
+            </Link>
+          ) : (
+            "Coming soon"
+          )}
         </Button>
       </CardFooter>
     </Card>
@@ -220,7 +229,8 @@ const jsBasicsTopics = [
     description: "Learn about variables, primitive data types, and type coercion in JavaScript.",
     icon: <Terminal className="h-5 w-5 text-primary" />,
     duration: "25 min",
-    level: "beginner" as const
+    level: "beginner" as const,
+    link: "/tutorial/javascript-variables"
   },
   {
     title: "Operators & Expressions",
@@ -252,7 +262,8 @@ const jsFunctionsTopics = [
     description: "Learn function declarations, expressions, parameters, and return values.",
     icon: <Code className="h-5 w-5 text-primary" />,
     duration: "35 min",
-    level: "beginner" as const
+    level: "beginner" as const,
+    link: "/tutorial/javascript-functions"
   },
   {
     title: "Scope & Closures",

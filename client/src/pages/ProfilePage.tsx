@@ -2,6 +2,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useTheme } from "@/components/theme-provider"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Progress } from "@/components/ui/progress"
@@ -9,20 +10,29 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/AuthContext"
+import { tutorialCatalog } from "@/data/tutorials"
 import usePageTitle from "@/hooks/usePageTitle"
 import useProfile from "@/hooks/useProfile"
 import useProgress from "@/hooks/useProgress"
+import type { UserProgress } from "@/types/database"
 import { BookOpen, Calendar, ChevronRight, Code, Edit, Github, Globe, Mail, Moon, Save } from "lucide-react"
 import { useEffect, useState } from "react"
 import { useSearchParams } from "react-router-dom"
 
 export default function ProfilePage() {
   usePageTitle('Profile')
-  const { user } = useAuth()
+  const { user, signOut } = useAuth()
   const { profile, loading: profileLoading, updateProfile } = useProfile()
-  const { progress, loading: progressLoading } = useProgress()
+  const { allProgress, loading: progressLoading } = useProgress()
+  const { theme, setTheme } = useTheme()
   const [searchParams, setSearchParams] = useSearchParams()
   const selectedTab = getProfileTab(searchParams.get("tab"))
+  const [preferences, setPreferences] = useStoredPreferences()
+  const progressByTutorial = new Map(allProgress.map((item) => [item.tutorial_id, item]))
+  const overallPercentage = Math.round(tutorialCatalog.reduce((sum, tutorial) => (
+    sum + (progressByTutorial.get(tutorial.id)?.progress || 0)
+  ), 0) / tutorialCatalog.length)
+  const recentActivity = allProgress.slice(0, 5)
 
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
@@ -59,6 +69,24 @@ export default function ProfilePage() {
         bio: formData.bio
       })
       setIsEditing(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    if (!window.confirm("Delete your account and all saved progress? This cannot be undone.")) return
+
+    const token = localStorage.getItem("token")
+    if (!token) return
+
+    const response = await fetch(`${import.meta.env.VITE_API_URL || "http://localhost:5000/api"}/auth/me`, {
+      method: "DELETE",
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    })
+
+    if (response.ok) {
+      await signOut()
     }
   }
 
@@ -247,39 +275,31 @@ export default function ProfilePage() {
                   <div className="flex justify-between">
                     <span className="text-sm font-medium">Overall Completion</span>
                     <span className="text-sm font-medium">
-                      {progress?.overall_percentage || 0}%
+                      {overallPercentage}%
                     </span>
                   </div>
-                  <Progress value={progress?.overall_percentage || 0} />
+                  <Progress value={overallPercentage} />
                 </div>
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Course Progress</h3>
 
                   <div className="space-y-4">
-                    <ProgressItem
-                      title="JavaScript Fundamentals"
-                      completedModules={progress?.javascript_completed || 0}
-                      totalModules={12}
-                      lastActivity="2 days ago"
-                      icon={<Code className="h-5 w-5" />}
-                    />
+                    {tutorialCatalog.map((tutorial) => {
+                      const itemProgress = progressByTutorial.get(tutorial.id)
+                      const completedModules = Math.round(((itemProgress?.progress || 0) / 100) * tutorial.modules)
 
-                    <ProgressItem
-                      title="React Essentials"
-                      completedModules={progress?.react_completed || 0}
-                      totalModules={10}
-                      lastActivity="1 week ago"
-                      icon={<Code className="h-5 w-5" />}
-                    />
-
-                    <ProgressItem
-                      title="HTML & CSS Mastery"
-                      completedModules={progress?.html_css_completed || 0}
-                      totalModules={8}
-                      lastActivity="3 weeks ago"
-                      icon={<Code className="h-5 w-5" />}
-                    />
+                      return (
+                        <ProgressItem
+                          key={tutorial.id}
+                          title={tutorial.title}
+                          completedModules={completedModules}
+                          totalModules={tutorial.modules}
+                          lastActivity={itemProgress ? formatRelativeDate(itemProgress.last_accessed) : "Not started"}
+                          icon={<Code className="h-5 w-5" />}
+                        />
+                      )
+                    })}
                   </div>
                 </div>
 
@@ -287,23 +307,18 @@ export default function ProfilePage() {
                   <h3 className="text-lg font-medium">Recent Activity</h3>
 
                   <div className="space-y-3">
-                    <ActivityItem
-                      title="Completed 'JavaScript Variables and Data Types'"
-                      timestamp="2 days ago"
-                      icon={<BookOpen className="h-4 w-4" />}
-                    />
-
-                    <ActivityItem
-                      title="Completed 'Functions and Scope'"
-                      timestamp="2 days ago"
-                      icon={<BookOpen className="h-4 w-4" />}
-                    />
-
-                    <ActivityItem
-                      title="Started 'JavaScript Arrays and Objects'"
-                      timestamp="1 week ago"
-                      icon={<Calendar className="h-4 w-4" />}
-                    />
+                    {recentActivity.length > 0 ? (
+                      recentActivity.map((item) => (
+                        <ActivityItem
+                          key={item.id}
+                          title={formatActivityTitle(item)}
+                          timestamp={formatRelativeDate(item.last_accessed)}
+                          icon={item.completed ? <BookOpen className="h-4 w-4" /> : <Calendar className="h-4 w-4" />}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-sm text-muted-foreground">Open a lesson to start building your activity history.</p>
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -329,7 +344,11 @@ export default function ProfilePage() {
                       <Moon className="h-4 w-4" />
                       <span>Dark Mode</span>
                     </div>
-                    <Switch id="dark-mode" />
+                    <Switch
+                      id="dark-mode"
+                      checked={theme === "dark"}
+                      onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+                    />
                   </div>
                 </div>
 
@@ -343,7 +362,11 @@ export default function ProfilePage() {
                         <Label htmlFor="email-notifications">Email Notifications</Label>
                         <p className="text-xs text-muted-foreground">Receive course updates and announcements</p>
                       </div>
-                      <Switch id="email-notifications" defaultChecked />
+                      <Switch
+                        id="email-notifications"
+                        checked={preferences.emailNotifications}
+                        onCheckedChange={(checked) => setPreferences({ ...preferences, emailNotifications: checked })}
+                      />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -351,7 +374,11 @@ export default function ProfilePage() {
                         <Label htmlFor="progress-reminders">Progress Reminders</Label>
                         <p className="text-xs text-muted-foreground">Receive reminders about your learning progress</p>
                       </div>
-                      <Switch id="progress-reminders" defaultChecked />
+                      <Switch
+                        id="progress-reminders"
+                        checked={preferences.progressReminders}
+                        onCheckedChange={(checked) => setPreferences({ ...preferences, progressReminders: checked })}
+                      />
                     </div>
 
                     <div className="flex items-center justify-between">
@@ -359,7 +386,11 @@ export default function ProfilePage() {
                         <Label htmlFor="new-courses">New Course Alerts</Label>
                         <p className="text-xs text-muted-foreground">Get notified when new courses are available</p>
                       </div>
-                      <Switch id="new-courses" defaultChecked />
+                      <Switch
+                        id="new-courses"
+                        checked={preferences.newCourseAlerts}
+                        onCheckedChange={(checked) => setPreferences({ ...preferences, newCourseAlerts: checked })}
+                      />
                     </div>
                   </div>
                 </div>
@@ -368,7 +399,7 @@ export default function ProfilePage() {
 
                 <div className="space-y-4">
                   <h3 className="text-lg font-medium">Account Settings</h3>
-                  <Button variant="destructive">Delete Account</Button>
+                  <Button variant="destructive" onClick={handleDeleteAccount}>Delete Account</Button>
                   <p className="text-xs text-muted-foreground">
                     This will permanently delete your account and remove all your data from our servers.
                   </p>
@@ -444,4 +475,49 @@ function ActivityItem({ title, timestamp, icon }: ActivityItemProps) {
 function getProfileTab(tab: string | null) {
   if (tab === "progress" || tab === "settings") return tab
   return "account"
+}
+
+function formatRelativeDate(value: string) {
+  const date = new Date(value)
+  const diffDays = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000))
+
+  if (diffDays === 0) return "today"
+  if (diffDays === 1) return "yesterday"
+  return `${diffDays} days ago`
+}
+
+function formatActivityTitle(progress: UserProgress) {
+  const tutorial = tutorialCatalog.find((item) => item.id === progress.tutorial_id)
+  const title = tutorial?.title || progress.tutorial_id
+
+  return progress.completed ? `Completed '${title}'` : `Reached ${progress.progress}% in '${title}'`
+}
+
+function useStoredPreferences() {
+  const [preferences, setPreferencesState] = useState<LearningPreferences>(() => {
+    const stored = localStorage.getItem("learning-preferences")
+
+    if (stored) {
+      return JSON.parse(stored) as LearningPreferences
+    }
+
+    return {
+      emailNotifications: true,
+      progressReminders: true,
+      newCourseAlerts: true,
+    }
+  })
+
+  const setPreferences = (nextPreferences: LearningPreferences) => {
+    localStorage.setItem("learning-preferences", JSON.stringify(nextPreferences))
+    setPreferencesState(nextPreferences)
+  }
+
+  return [preferences, setPreferences] as const
+}
+
+type LearningPreferences = {
+  emailNotifications: boolean
+  progressReminders: boolean
+  newCourseAlerts: boolean
 }

@@ -4,14 +4,37 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/AuthContext"
+import { availableTutorials, tutorialCatalog, type TutorialSummary } from "@/data/tutorials"
 import usePageTitle from "@/hooks/usePageTitle"
-import { BookOpen, Code, Database, Flame, Layout, LucideIcon, Rocket, Sparkles, Trophy, Users } from "lucide-react"
+import useProgress from "@/hooks/useProgress"
+import type { UserProgress } from "@/types/database"
+import { BookOpen, Code, Flame, LucideIcon, Rocket, Trophy, Users } from "lucide-react"
+import { useMemo } from "react"
 import { Link } from "react-router-dom"
 
 export default function DashboardPage() {
   usePageTitle('Dashboard')
   const { user } = useAuth()
+  const { allProgress, loading } = useProgress()
   const username = user?.email?.split('@')[0] || 'User'
+  const progressByTutorial = useMemo(() => mapProgressByTutorial(allProgress), [allProgress])
+  const inProgressCourses = availableTutorials
+    .filter((course) => {
+      const progress = progressByTutorial.get(course.id)
+      return progress && !progress.completed && progress.progress > 0
+    })
+    .sort((a, b) => getProgressValue(b, progressByTutorial) - getProgressValue(a, progressByTutorial))
+  const completedCourses = tutorialCatalog.filter((course) => progressByTutorial.get(course.id)?.completed)
+  const recommendedCourses = tutorialCatalog
+    .filter((course) => !progressByTutorial.get(course.id)?.completed && !inProgressCourses.some((item) => item.id === course.id))
+    .slice(0, 4)
+  const nextCourse = inProgressCourses[0] || recommendedCourses.find((course) => course.available) || recommendedCourses[0]
+  const completedCount = completedCourses.length
+  const totalStarted = allProgress.length
+  const averageProgress = tutorialCatalog.length === 0
+    ? 0
+    : Math.round(tutorialCatalog.reduce((sum, tutorial) => sum + getProgressValue(tutorial, progressByTutorial), 0) / tutorialCatalog.length)
+  const streakDays = calculateStreak(allProgress)
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-8 max-w-6xl">
@@ -26,11 +49,20 @@ export default function DashboardPage() {
         <div className="flex items-center gap-3">
           <Button variant="outline" size="sm">
             <Flame className="mr-2 h-4 w-4 text-orange-500" />
-            <span className="font-medium">3 day streak</span>
+            <span className="font-medium">{streakDays} day streak</span>
           </Button>
-          <Button>
-            <Rocket className="mr-2 h-4 w-4" />
-            Continue Learning
+          <Button asChild disabled={!nextCourse?.available}>
+            {nextCourse?.available ? (
+              <Link to={nextCourse.link}>
+                <Rocket className="mr-2 h-4 w-4" />
+                Continue Learning
+              </Link>
+            ) : (
+              <span>
+                <Rocket className="mr-2 h-4 w-4" />
+                Continue Learning
+              </span>
+            )}
           </Button>
         </div>
       </div>
@@ -46,36 +78,41 @@ export default function DashboardPage() {
         {/* In Progress Tab */}
         <TabsContent value="inProgress" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mockInProgressCourses.map((course) => (
+            {inProgressCourses.map((course) => (
               <CourseCard
                 key={course.id}
                 course={course}
+                progress={getProgressValue(course, progressByTutorial)}
                 status="inProgress"
               />
             ))}
           </div>
+          <EmptyState show={!loading && inProgressCourses.length === 0} title="No lessons in progress yet" action="Start a tutorial to see it here." />
         </TabsContent>
 
         {/* Completed Tab */}
         <TabsContent value="completed" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mockCompletedCourses.map((course) => (
+            {completedCourses.map((course) => (
               <CourseCard
                 key={course.id}
                 course={course}
+                progress={100}
                 status="completed"
               />
             ))}
           </div>
+          <EmptyState show={!loading && completedCourses.length === 0} title="No completed lessons yet" action="Finish a quiz to mark a lesson complete." />
         </TabsContent>
 
         {/* Recommended Tab */}
         <TabsContent value="recommended" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mockRecommendedCourses.map((course) => (
+            {recommendedCourses.map((course) => (
               <CourseCard
                 key={course.id}
                 course={course}
+                progress={getProgressValue(course, progressByTutorial)}
                 status="recommended"
               />
             ))}
@@ -89,21 +126,21 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <StatCard
             title="Courses Completed"
-            value="2"
+            value={String(completedCount)}
             icon={Trophy}
-            description="Keep up the momentum!"
+            description={`${totalStarted} lesson${totalStarted === 1 ? "" : "s"} started`}
           />
           <StatCard
             title="Lesson Streak"
-            value="3 days"
+            value={`${streakDays} day${streakDays === 1 ? "" : "s"}`}
             icon={Flame}
-            description="Last studied yesterday"
+            description={allProgress[0] ? `Last studied ${formatRelativeDate(allProgress[0].last_accessed)}` : "Start a lesson to build momentum"}
           />
           <StatCard
-            title="Community Rank"
-            value="#138"
+            title="Overall Progress"
+            value={`${averageProgress}%`}
             icon={Users}
-            description="Top 15% of learners"
+            description="Across the full catalog"
           />
         </div>
       </div>
@@ -138,12 +175,13 @@ export default function DashboardPage() {
 }
 
 interface CourseProps {
-  course: Course
+  course: TutorialSummary
+  progress: number
   status: 'inProgress' | 'completed' | 'recommended'
 }
 
-function CourseCard({ course, status }: CourseProps) {
-  const { title, description, progress, level, duration, modules, icon: Icon, link } = course
+function CourseCard({ course, progress, status }: CourseProps) {
+  const { title, description, level, duration, modules, icon: Icon, link, available } = course
 
   return (
     <Card>
@@ -192,16 +230,16 @@ function CourseCard({ course, status }: CourseProps) {
         <Button
           className="w-full"
           variant={status === 'completed' ? 'outline' : 'default'}
-          asChild={!!link}
+          asChild={available}
+          disabled={!available}
         >
-          {link ? (
+          {available ? (
             <Link to={link}>
               {status === 'inProgress' ? 'Continue' :
                status === 'completed' ? 'Review Course' : 'Start Learning'}
             </Link>
           ) : (
-            status === 'inProgress' ? 'Continue' :
-            status === 'completed' ? 'Review Course' : 'Start Learning'
+            "Coming Soon"
           )}
         </Button>
       </CardFooter>
@@ -233,18 +271,6 @@ function StatCard({ title, value, description, icon: Icon }: StatCardProps) {
   )
 }
 
-interface Course {
-  id: string
-  title: string
-  description: string
-  progress: number
-  level: 'Beginner' | 'Intermediate' | 'Advanced'
-  duration: string
-  modules: number
-  icon: LucideIcon
-  link?: string
-}
-
 interface Event {
   id: string
   title: string
@@ -253,76 +279,48 @@ interface Event {
   type: 'webinar' | 'workshop'
 }
 
-// Mock data
-const mockInProgressCourses: Course[] = [
-  {
-    id: '1',
-    title: 'Modern JavaScript Fundamentals',
-    description: 'Master JavaScript ES6+ features, async programming, and DOM manipulation',
-    progress: 65,
-    level: 'Intermediate',
-    duration: '8 hours',
-    modules: 12,
-    icon: Code,
-    link: '/javascript-fundamentals'
-  },
-  {
-    id: '2',
-    title: 'Responsive Web Design',
-    description: 'Create beautiful, responsive layouts with CSS Grid and Flexbox',
-    progress: 23,
-    level: 'Beginner',
-    duration: '6 hours',
-    modules: 8,
-    icon: Layout
-  }
-]
+function EmptyState({ show, title, action }: { show: boolean; title: string; action: string }) {
+  if (!show) return null
 
-const mockCompletedCourses: Course[] = [
-  {
-    id: '3',
-    title: 'HTML & CSS Basics',
-    description: 'Core concepts of HTML5 and CSS3 for building modern websites',
-    progress: 100,
-    level: 'Beginner',
-    duration: '4 hours',
-    modules: 6,
-    icon: BookOpen
-  },
-  {
-    id: '4',
-    title: 'Git & GitHub Fundamentals',
-    description: 'Master version control and collaborative development workflows',
-    progress: 100,
-    level: 'Beginner',
-    duration: '3 hours',
-    modules: 5,
-    icon: Users
-  }
-]
+  return (
+    <Card>
+      <CardContent className="py-8 text-center">
+        <p className="font-medium">{title}</p>
+        <p className="text-sm text-muted-foreground mt-1">{action}</p>
+      </CardContent>
+    </Card>
+  )
+}
 
-const mockRecommendedCourses: Course[] = [
-  {
-    id: '5',
-    title: 'React.js: Building Modern UIs',
-    description: 'Build dynamic user interfaces with React hooks, context and custom components',
-    progress: 0,
-    level: 'Intermediate',
-    duration: '10 hours',
-    modules: 15,
-    icon: Sparkles
-  },
-  {
-    id: '6',
-    title: 'Node.js & Express Backend',
-    description: 'Create robust REST APIs and server-side applications with Node.js',
-    progress: 0,
-    level: 'Advanced',
-    duration: '8 hours',
-    modules: 10,
-    icon: Database
+function mapProgressByTutorial(progress: UserProgress[]) {
+  return new Map(progress.map((item) => [item.tutorial_id, item]))
+}
+
+function getProgressValue(course: TutorialSummary, progressByTutorial: Map<string, UserProgress>) {
+  return progressByTutorial.get(course.id)?.progress || 0
+}
+
+function calculateStreak(progress: UserProgress[]) {
+  const activeDays = new Set(progress.map((item) => new Date(item.last_accessed).toDateString()))
+  let streak = 0
+  const cursor = new Date()
+
+  while (activeDays.has(cursor.toDateString())) {
+    streak += 1
+    cursor.setDate(cursor.getDate() - 1)
   }
-]
+
+  return streak
+}
+
+function formatRelativeDate(value: string) {
+  const date = new Date(value)
+  const diffDays = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000))
+
+  if (diffDays === 0) return "today"
+  if (diffDays === 1) return "yesterday"
+  return `${diffDays} days ago`
+}
 
 const mockEvents: Event[] = [
   {

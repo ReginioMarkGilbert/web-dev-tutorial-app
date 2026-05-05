@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import { tutorialCatalog, type TutorialSummary } from "@/data/tutorials"
 import usePageTitle from "@/hooks/usePageTitle"
 import {
   Select,
@@ -10,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { BookOpen, Code, Database, FileCode, Layout, Search, Server, Sparkles } from "lucide-react"
+import { BookOpen, Code, Search, Sparkles } from "lucide-react"
 import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 
@@ -18,9 +19,9 @@ export default function TutorialsPage() {
   usePageTitle('Tutorials')
   const [query, setQuery] = useState("")
   const [difficulty, setDifficulty] = useState<TutorialFilter>("all")
-  const filteredFrontendTutorials = useMemo(() => filterTutorials(frontendTutorials, query, difficulty), [query, difficulty])
-  const filteredBackendTutorials = useMemo(() => filterTutorials(backendTutorials, query, difficulty), [query, difficulty])
-  const filteredFullstackTutorials = useMemo(() => filterTutorials(fullstackTutorials, query, difficulty), [query, difficulty])
+  const filteredFrontendTutorials = useMemo(() => filterTutorials(tutorialCatalog.filter((tutorial) => tutorial.category === "Frontend"), query, difficulty), [query, difficulty])
+  const filteredBackendTutorials = useMemo(() => filterTutorials(tutorialCatalog.filter((tutorial) => tutorial.category === "Backend"), query, difficulty), [query, difficulty])
+  const filteredFullstackTutorials = useMemo(() => filterTutorials(tutorialCatalog.filter((tutorial) => tutorial.category === "Full Stack"), query, difficulty), [query, difficulty])
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-8 max-w-6xl">
@@ -180,11 +181,11 @@ export default function TutorialsPage() {
 }
 
 interface TutorialCardProps {
-  tutorial: Tutorial
+  tutorial: TutorialSummary
 }
 
 function TutorialCard({ tutorial }: TutorialCardProps) {
-  const { title, description, level, duration, modules, icon: Icon, link } = tutorial
+  const { title, description, level, duration, modules, icon: Icon, link, available } = tutorial
 
   return (
     <Card className="h-full flex flex-col">
@@ -221,10 +222,10 @@ function TutorialCard({ tutorial }: TutorialCardProps) {
         </div>
         <Button
           className="w-full"
-          asChild={!!link}
-          disabled={!link}
+          asChild={available}
+          disabled={!available}
         >
-          {link ? (
+          {available ? (
             <Link to={link}>Start Learning</Link>
           ) : (
             "Coming Soon"
@@ -233,17 +234,6 @@ function TutorialCard({ tutorial }: TutorialCardProps) {
       </CardFooter>
     </Card>
   )
-}
-
-interface Tutorial {
-  id: string
-  title: string
-  description: string
-  level: 'Beginner' | 'Intermediate' | 'Advanced'
-  duration: string
-  modules: number
-  icon: React.ComponentType<{ className?: string }>
-  link?: string
 }
 
 type TutorialFilter = "all" | "beginner" | "intermediate" | "advanced"
@@ -260,7 +250,7 @@ function EmptyTutorials({ isEmpty }: { isEmpty: boolean }) {
   )
 }
 
-function filterTutorials(tutorials: Tutorial[], query: string, difficulty: TutorialFilter) {
+function filterTutorials(tutorials: TutorialSummary[], query: string, difficulty: TutorialFilter) {
   const normalizedQuery = query.trim().toLowerCase()
 
   return tutorials.filter((tutorial) => {
@@ -275,101 +265,6 @@ function filterTutorials(tutorials: Tutorial[], query: string, difficulty: Tutor
   })
 }
 
-// Mock data for Frontend tutorials
-const frontendTutorials: Tutorial[] = [
-  {
-    id: 'fe1',
-    title: 'Modern JavaScript Fundamentals',
-    description: 'Master JavaScript ES6+ features, async programming, and DOM manipulation',
-    level: 'Intermediate',
-    duration: '8 hours',
-    modules: 12,
-    icon: Code,
-    link: '/tutorial/javascript-variables'
-  },
-  {
-    id: 'fe2',
-    title: 'Responsive Web Design',
-    description: 'Create beautiful, responsive layouts with CSS Grid and Flexbox',
-    level: 'Beginner',
-    duration: '6 hours',
-    modules: 8,
-    icon: Layout
-  },
-  {
-    id: 'fe3',
-    title: 'React.js: Building Modern UIs',
-    description: 'Build dynamic user interfaces with React hooks, context and custom components',
-    level: 'Intermediate',
-    duration: '10 hours',
-    modules: 15,
-    icon: Sparkles
-  }
-]
-
-// Mock data for Backend tutorials
-const backendTutorials: Tutorial[] = [
-  {
-    id: 'be1',
-    title: 'Node.js & Express Backend',
-    description: 'Create robust REST APIs and server-side applications with Node.js',
-    level: 'Advanced',
-    duration: '8 hours',
-    modules: 10,
-    icon: Server
-  },
-  {
-    id: 'be2',
-    title: 'SQL Databases for Web Devs',
-    description: 'Learn SQL fundamentals and database design for web applications',
-    level: 'Intermediate',
-    duration: '7 hours',
-    modules: 9,
-    icon: Database
-  },
-  {
-    id: 'be3',
-    title: 'API Design Principles',
-    description: 'Best practices for designing robust and scalable APIs',
-    level: 'Intermediate',
-    duration: '5 hours',
-    modules: 7,
-    icon: FileCode
-  }
-]
-
-// Mock data for Full Stack tutorials
-const fullstackTutorials: Tutorial[] = [
-  {
-    id: 'fs1',
-    title: 'MERN Stack Development',
-    description: 'Build full-stack applications with MongoDB, Express, React and Node.js',
-    level: 'Advanced',
-    duration: '15 hours',
-    modules: 18,
-    icon: Sparkles
-  },
-  {
-    id: 'fs2',
-    title: 'JAMstack Websites',
-    description: 'Create fast, secure websites with JavaScript, APIs, and Markup',
-    level: 'Intermediate',
-    duration: '9 hours',
-    modules: 11,
-    icon: Layout
-  },
-  {
-    id: 'fs3',
-    title: 'TypeScript Full Stack',
-    description: 'End-to-end type-safe applications with TypeScript, React, and Node.js',
-    level: 'Advanced',
-    duration: '12 hours',
-    modules: 14,
-    icon: Code
-  }
-]
-
-// Mock data for Trending tutorials
 const trendingTutorials = [
   {
     id: 'trend1',

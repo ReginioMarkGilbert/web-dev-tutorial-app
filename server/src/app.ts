@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import express from 'express';
 import helmet from 'helmet';
 import authRoutes from './routes/auth';
+import profilesRoutes from './routes/profiles';
+import progressRoutes from './routes/progress';
 
 dotenv.config();
 
@@ -40,8 +42,8 @@ app.get('/api', (req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
-// app.use('/api/profiles', profilesRoutes);
-// app.use('/api/progress', progressRoutes);
+app.use('/api/profiles', profilesRoutes);
+app.use('/api/progress', progressRoutes);
 // app.use('/api/tutorials', tutorialsRoutes);
 
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
