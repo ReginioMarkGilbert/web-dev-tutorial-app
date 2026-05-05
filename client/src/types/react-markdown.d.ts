@@ -3,10 +3,10 @@ declare module 'react-markdown' {
 
   export interface ReactMarkdownProps {
     children: string;
-    components?: Record<string, ComponentType<any>>;
-    remarkPlugins?: any[];
-    rehypePlugins?: any[];
-    [key: string]: any;
+    components?: Record<string, ComponentType<Record<string, unknown>>>;
+    remarkPlugins?: unknown[];
+    rehypePlugins?: unknown[];
+    [key: string]: unknown;
   }
 
   const ReactMarkdown: ComponentType<ReactMarkdownProps>;
@@ -19,10 +19,10 @@ declare module 'react-syntax-highlighter' {
 
   export interface SyntaxHighlighterProps {
     children: string;
-    style?: any;
+    style?: unknown;
     language?: string;
-    PreTag?: string | ComponentType<any>;
-    [key: string]: any;
+    PreTag?: string | ComponentType<Record<string, unknown>>;
+    [key: string]: unknown;
   }
 
   export const Prism: ComponentType<SyntaxHighlighterProps>;
@@ -30,10 +30,10 @@ declare module 'react-syntax-highlighter' {
 }
 
 declare module 'react-syntax-highlighter/dist/esm/styles/prism' {
-  export const oneDark: any;
-  export const dark: any;
-  export const prism: any;
-  export const vscDarkPlus: any;
-  export const atomDark: any;
-  export const dracula: any;
+  export const oneDark: unknown;
+  export const dark: unknown;
+  export const prism: unknown;
+  export const vscDarkPlus: unknown;
+  export const atomDark: unknown;
+  export const dracula: unknown;
 }

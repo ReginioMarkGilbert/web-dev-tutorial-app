@@ -10,15 +10,20 @@ type AuthContextType = {
    user: User | null
    loading: boolean
    isSigningOut: boolean
-   signUp: (email: string, password: string) => Promise<{
-      error: any | null
-      data: any | null
-   }>
-   signIn: (email: string, password: string) => Promise<{
-      error: any | null
-      data: any | null
-   }>
+   signUp: (email: string, password: string) => Promise<AuthResult>
+   signIn: (email: string, password: string) => Promise<AuthResult>
    signOut: () => Promise<void>
+}
+
+type AuthResponse = {
+   token: string
+   user: User
+   message?: string
+}
+
+type AuthResult = {
+   error: string | null
+   data: AuthResponse | null
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -86,11 +91,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             body: JSON.stringify({ email, password })
          })
 
-         const data = await response.json()
+         const data = await response.json() as Partial<AuthResponse>
 
          if (!response.ok)
          {
             return { data: null, error: data.message || 'Signup failed' }
+         }
+
+         if (!data.token || !data.user)
+         {
+            return { data: null, error: 'Invalid signup response' }
          }
 
          // Store token and set user
@@ -100,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: data.user.email
          })
 
-         return { data, error: null }
+         return { data: data as AuthResponse, error: null }
       } catch (error)
       {
          console.error('Signup error:', error)
@@ -119,11 +129,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             body: JSON.stringify({ email, password })
          })
 
-         const data = await response.json()
+         const data = await response.json() as Partial<AuthResponse>
 
          if (!response.ok)
          {
             return { data: null, error: data.message || 'Login failed' }
+         }
+
+         if (!data.token || !data.user)
+         {
+            return { data: null, error: 'Invalid login response' }
          }
 
          // Store token and set user
@@ -133,7 +148,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             email: data.user.email
          })
 
-         return { data, error: null }
+         return { data: data as AuthResponse, error: null }
       } catch (error)
       {
          console.error('Login error:', error)

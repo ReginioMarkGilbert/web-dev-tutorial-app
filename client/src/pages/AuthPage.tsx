@@ -4,6 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useAuth } from '@/contexts/AuthContext'
+import usePageTitle from '@/hooks/usePageTitle'
 import { motion } from 'framer-motion'
 import { ArrowLeftIcon, EyeIcon, EyeOffIcon, Loader2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
@@ -11,6 +12,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'sonner'
 
 export default function AuthPage() {
+  usePageTitle('Sign In')
+
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
@@ -49,8 +52,8 @@ export default function AuthPage() {
       // Navigate to the originally requested page or dashboard
       const redirectTo = location.state?.from || '/dashboard'
       navigate(redirectTo)
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to sign in'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err || 'Failed to sign in')
       setError(errorMessage)
       toast.error(errorMessage, {
         id: loadingToast,
@@ -85,8 +88,8 @@ export default function AuthPage() {
       // Navigate to the originally requested page or dashboard
       const redirectTo = location.state?.from || '/dashboard'
       navigate(redirectTo)
-    } catch (err: any) {
-      const errorMessage = err.message || 'Failed to sign up'
+    } catch (err: unknown) {
+      const errorMessage = err instanceof Error ? err.message : String(err || 'Failed to sign up')
       setError(errorMessage)
       toast.error(errorMessage, {
         id: loadingToast,
@@ -155,9 +158,6 @@ export default function AuthPage() {
                     <div className="space-y-2">
                       <div className="flex justify-between items-center">
                         <label htmlFor="password" className="text-sm font-medium">Password</label>
-                        <Link to="#" className="text-xs text-primary hover:underline">
-                          Forgot password?
-                        </Link>
                       </div>
                       <div className="relative">
                         <Input
@@ -323,7 +323,7 @@ export default function AuthPage() {
               </TabsContent>
             </CardContent>
             <CardFooter className="flex justify-center text-xs text-muted-foreground pb-6 px-8 text-center">
-              <p>By continuing, you agree to our <Link to="#" className="underline hover:text-primary">Terms of Service</Link> and <Link to="#" className="underline hover:text-primary">Privacy Policy</Link>.</p>
+              <p>By continuing, you agree to use Web Dev Tutorials responsibly.</p>
             </CardFooter>
           </Tabs>
         </Card>

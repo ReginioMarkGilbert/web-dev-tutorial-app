@@ -3,9 +3,18 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import usePageTitle from "@/hooks/usePageTitle"
 import { BookOpen, Code, ExternalLink, FileCode, Github, Globe, Layout, Library, Search } from "lucide-react"
+import { useMemo, useState } from "react"
 
 export default function ResourcesPage() {
+  usePageTitle('Resources')
+  const [query, setQuery] = useState("")
+  const filteredDocumentation = useMemo(() => filterResources(documentationResources, query), [query])
+  const filteredTutorials = useMemo(() => filterResources(tutorialResources, query), [query])
+  const filteredTools = useMemo(() => filterResources(toolResources, query), [query])
+  const filteredCommunity = useMemo(() => filterResources(communityResources, query), [query])
+
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-8 max-w-6xl">
       {/* Header section */}
@@ -24,6 +33,8 @@ export default function ResourcesPage() {
             <Input
               placeholder="Search for resources..."
               className="pl-10"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
             />
           </div>
         </CardContent>
@@ -41,49 +52,53 @@ export default function ResourcesPage() {
         {/* Documentation Tab */}
         <TabsContent value="documentation" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {documentationResources.map((resource) => (
+            {filteredDocumentation.map((resource) => (
               <ResourceCard
                 key={resource.title}
                 resource={resource}
               />
             ))}
           </div>
+          <EmptyResources isEmpty={filteredDocumentation.length === 0} />
         </TabsContent>
 
         {/* Tutorials Tab */}
         <TabsContent value="tutorials" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {tutorialResources.map((resource) => (
+            {filteredTutorials.map((resource) => (
               <ResourceCard
                 key={resource.title}
                 resource={resource}
               />
             ))}
           </div>
+          <EmptyResources isEmpty={filteredTutorials.length === 0} />
         </TabsContent>
 
         {/* Tools Tab */}
         <TabsContent value="tools" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {toolResources.map((resource) => (
+            {filteredTools.map((resource) => (
               <ResourceCard
                 key={resource.title}
                 resource={resource}
               />
             ))}
           </div>
+          <EmptyResources isEmpty={filteredTools.length === 0} />
         </TabsContent>
 
         {/* Community Tab */}
         <TabsContent value="community" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {communityResources.map((resource) => (
+            {filteredCommunity.map((resource) => (
               <ResourceCard
                 key={resource.title}
                 resource={resource}
               />
             ))}
           </div>
+          <EmptyResources isEmpty={filteredCommunity.length === 0} />
         </TabsContent>
       </Tabs>
 
@@ -94,16 +109,16 @@ export default function ResourcesPage() {
           <FeaturedResourceCard
             title="Full Stack Open"
             description="Deep dive into modern web development with React, Redux, Node.js, MongoDB, GraphQL and TypeScript."
-            image="/fullstackopen.png"
             tags={["Full-Stack", "React", "Node.js"]}
             url="https://fullstackopen.com/"
+            icon={<Code className="h-12 w-12" />}
           />
           <FeaturedResourceCard
             title="The Odin Project"
             description="Free full-stack curriculum with a focus on real-world projects and collaboration."
-            image="/odinproject.png"
             tags={["Full-Stack", "Open Source", "Project-Based"]}
             url="https://www.theodinproject.com/"
+            icon={<BookOpen className="h-12 w-12" />}
           />
         </div>
       </div>
@@ -111,14 +126,16 @@ export default function ResourcesPage() {
   )
 }
 
+type Resource = {
+  title: string
+  description: string
+  url: string
+  icon: React.ReactNode
+  tags: string[]
+}
+
 interface ResourceCardProps {
-  resource: {
-    title: string
-    description: string
-    url: string
-    icon: React.ReactNode
-    tags: string[]
-  }
+  resource: Resource
 }
 
 function ResourceCard({ resource }: ResourceCardProps) {
@@ -161,18 +178,22 @@ function ResourceCard({ resource }: ResourceCardProps) {
 interface FeaturedResourceCardProps {
   title: string
   description: string
-  image: string
   tags: string[]
   url: string
+  icon: React.ReactNode
 }
 
-function FeaturedResourceCard({ title, description, image, tags, url }: FeaturedResourceCardProps) {
+function FeaturedResourceCard({ title, description, tags, url, icon }: FeaturedResourceCardProps) {
   return (
     <Card className="overflow-hidden">
-      <div className="h-40 bg-muted flex items-center justify-center">
-        <div className="text-3xl font-bold text-muted-foreground">{title}</div>
-        {/* Image would go here if available */}
-        {/* <img src={image} alt={title} className="w-full h-full object-cover" /> */}
+      <div className="h-40 bg-gradient-to-br from-slate-950 via-sky-900 to-cyan-600 text-white flex items-center justify-between p-6">
+        <div>
+          <p className="text-sm uppercase tracking-wide text-white/70">Featured curriculum</p>
+          <div className="mt-2 text-3xl font-bold">{title}</div>
+        </div>
+        <div className="rounded-xl bg-white/10 p-4">
+          {icon}
+        </div>
       </div>
       <CardHeader>
         <CardTitle>{title}</CardTitle>
@@ -196,6 +217,34 @@ function FeaturedResourceCard({ title, description, image, tags, url }: Featured
       </CardFooter>
     </Card>
   )
+}
+
+function EmptyResources({ isEmpty }: { isEmpty: boolean }) {
+  if (!isEmpty) return null
+
+  return (
+    <Card>
+      <CardContent className="py-8 text-center text-sm text-muted-foreground">
+        No resources match your search.
+      </CardContent>
+    </Card>
+  )
+}
+
+function filterResources(resources: Resource[], query: string) {
+  const normalizedQuery = query.trim().toLowerCase()
+
+  if (!normalizedQuery) return resources
+
+  return resources.filter((resource) => {
+    const searchable = [
+      resource.title,
+      resource.description,
+      ...resource.tags
+    ].join(" ").toLowerCase()
+
+    return searchable.includes(normalizedQuery)
+  })
 }
 
 // Mock data for Documentation resources

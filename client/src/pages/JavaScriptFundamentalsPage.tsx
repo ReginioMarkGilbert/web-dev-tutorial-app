@@ -2,10 +2,13 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import usePageTitle from "@/hooks/usePageTitle"
 import { ArrowLeft, BookOpen, ChevronRight, Code, FileCode, List, Play, Terminal } from "lucide-react"
 import { Link } from "react-router-dom"
 
 export default function JavaScriptFundamentalsPage() {
+  usePageTitle('JavaScript Fundamentals')
+
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-8 max-w-6xl">
       {/* Header section */}

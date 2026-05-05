@@ -9,15 +9,20 @@ import { Separator } from "@/components/ui/separator"
 import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/AuthContext"
+import usePageTitle from "@/hooks/usePageTitle"
 import useProfile from "@/hooks/useProfile"
 import useProgress from "@/hooks/useProgress"
 import { BookOpen, Calendar, ChevronRight, Code, Edit, Github, Globe, Mail, Moon, Save } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
+import { useSearchParams } from "react-router-dom"
 
 export default function ProfilePage() {
+  usePageTitle('Profile')
   const { user } = useAuth()
   const { profile, loading: profileLoading, updateProfile } = useProfile()
   const { progress, loading: progressLoading } = useProgress()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const selectedTab = getProfileTab(searchParams.get("tab"))
 
   const [isEditing, setIsEditing] = useState(false)
   const [formData, setFormData] = useState({
@@ -27,6 +32,18 @@ export default function ProfilePage() {
     github: profile?.github || "",
     bio: profile?.bio || ""
   })
+
+  useEffect(() => {
+    if (!isEditing) {
+      setFormData({
+        name: profile?.full_name || "",
+        email: user?.email || "",
+        website: profile?.website || "",
+        github: profile?.github || "",
+        bio: profile?.bio || ""
+      })
+    }
+  }, [isEditing, profile, user])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target
@@ -66,7 +83,11 @@ export default function ProfilePage() {
         </p>
       </div>
 
-      <Tabs defaultValue="account" className="space-y-6">
+      <Tabs
+        value={selectedTab}
+        onValueChange={(value) => setSearchParams(value === "account" ? {} : { tab: value })}
+        className="space-y-6"
+      >
         <TabsList>
           <TabsTrigger value="account">Account</TabsTrigger>
           <TabsTrigger value="progress">Learning Progress</TabsTrigger>
@@ -93,7 +114,7 @@ export default function ProfilePage() {
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => setIsEditing(!isEditing)}
+                    onClick={isEditing ? handleSaveProfile : () => setIsEditing(true)}
                     className="gap-2"
                   >
                     {isEditing ? <Save className="h-4 w-4" /> : <Edit className="h-4 w-4" />}
@@ -418,4 +439,9 @@ function ActivityItem({ title, timestamp, icon }: ActivityItemProps) {
       <ChevronRight className="h-4 w-4 text-muted-foreground" />
     </div>
   )
+}
+
+function getProfileTab(tab: string | null) {
+  if (tab === "progress" || tab === "settings") return tab
+  return "account"
 }

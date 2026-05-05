@@ -4,10 +4,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Progress } from "@/components/ui/progress"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/AuthContext"
+import usePageTitle from "@/hooks/usePageTitle"
 import { BookOpen, Code, Database, Flame, Layout, LucideIcon, Rocket, Sparkles, Trophy, Users } from "lucide-react"
 import { Link } from "react-router-dom"
 
 export default function DashboardPage() {
+  usePageTitle('Dashboard')
   const { user } = useAuth()
   const username = user?.email?.split('@')[0] || 'User'
 

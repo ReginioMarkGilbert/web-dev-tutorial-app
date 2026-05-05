@@ -2,18 +2,48 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/contexts/AuthContext"
 import useProgress from "@/hooks/useProgress"
+import usePageTitle from "@/hooks/usePageTitle"
 import { cn } from "@/lib/utils"
 import '@/styles/markdown.css'
-import { ArrowLeft, ArrowRight, BookOpen, CheckCircle, ChevronRight, Clock, ExternalLink, FileCode, List, Play } from "lucide-react"
+import { ArrowLeft, ArrowRight, BookOpen, CheckCircle, ChevronRight, Clock, ExternalLink, List } from "lucide-react"
 import { useEffect, useState } from "react"
 import ReactMarkdown from 'react-markdown'
 import { Link, useParams } from "react-router-dom"
 
+type TutorialId = "javascript-variables" | "javascript-functions"
+
+type TutorialSection = {
+  title: string
+  content: string
+}
+
+type QuizQuestion = {
+  question: string
+  options: string[]
+  answer: number
+}
+
+type TutorialResource = {
+  title: string
+  url: string
+}
+
+type TutorialContent = {
+  title: string
+  description: string
+  duration: string
+  level: string
+  sections: TutorialSection[]
+  quiz: QuizQuestion[]
+  resources: TutorialResource[]
+  nextTutorial: TutorialId | null
+  prevTutorial: TutorialId | null
+}
+
 // Mock data for tutorial content
-const tutorialData = {
+const tutorialData: Record<TutorialId, TutorialContent> = {
   "javascript-variables": {
     title: "JavaScript Variables and Data Types",
     description: "Learn how variables work in JavaScript and understand the different data types available.",
@@ -322,7 +352,7 @@ greetShort("Charlie"); // Returns: "Hello, Charlie!"
         url: "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Guide/Functions"
       }
     ],
-    nextTutorial: "javascript-arrays",
+    nextTutorial: null,
     prevTutorial: "javascript-variables"
   }
 };
@@ -330,9 +360,9 @@ greetShort("Charlie"); // Returns: "Hello, Charlie!"
 export default function TutorialDetailPage() {
   const { tutorialId } = useParams<{ tutorialId: string }>();
   const { user } = useAuth();
-  const { updateProgress } = useProgress();
+  const { updateProgress } = useProgress(tutorialId);
 
-  const [tutorial, setTutorial] = useState<any>(null);
+  const [tutorial, setTutorial] = useState<TutorialContent | null>(null);
   const [loading, setLoading] = useState(true);
   const [activeSection, setActiveSection] = useState(0);
   const [quizMode, setQuizMode] = useState(false);
@@ -340,14 +370,22 @@ export default function TutorialDetailPage() {
   const [quizSubmitted, setQuizSubmitted] = useState(false);
   const [quizScore, setQuizScore] = useState(0);
 
+  usePageTitle(tutorial?.title || (loading ? 'Tutorial' : 'Tutorial Not Found'));
+
   useEffect(() => {
     // In a real app, this would be an API call
-    if (tutorialId && tutorialData[tutorialId as keyof typeof tutorialData]) {
-      setTutorial(tutorialData[tutorialId as keyof typeof tutorialData]);
+    if (tutorialId && tutorialId in tutorialData) {
+      const nextTutorial = tutorialData[tutorialId as TutorialId];
+      setTutorial(nextTutorial);
       setLoading(false);
-      setQuizAnswers(new Array(tutorialData[tutorialId as keyof typeof tutorialData].quiz.length).fill(-1));
+      setActiveSection(0);
+      setQuizMode(false);
+      setQuizSubmitted(false);
+      setQuizScore(0);
+      setQuizAnswers(new Array(nextTutorial.quiz.length).fill(-1));
     } else {
       // Tutorial not found
+      setTutorial(null);
       setLoading(false);
     }
   }, [tutorialId]);
@@ -365,11 +403,12 @@ export default function TutorialDetailPage() {
     setQuizScore(score);
     setQuizSubmitted(true);
 
-    // In a real app, this would update user progress in the database
-    updateProgress?.({
-      completed: true,
-      progress: (score / tutorial.quiz.length) * 100
-    });
+    if (user) {
+      updateProgress?.({
+        completed: true,
+        progress: (score / tutorial.quiz.length) * 100
+      });
+    }
   };
 
   const handleQuizAnswerSelect = (questionIndex: number, answerIndex: number) => {
@@ -430,7 +469,7 @@ export default function TutorialDetailPage() {
         )}
 
         <div className="space-y-6">
-          {tutorial.quiz.map((quizItem: any, qIndex: number) => (
+          {tutorial.quiz.map((quizItem: QuizQuestion, qIndex: number) => (
             <Card key={qIndex} className={cn({
               "border-green-500": quizSubmitted && quizAnswers[qIndex] === quizItem.answer,
               "border-red-500": quizSubmitted && quizAnswers[qIndex] !== quizItem.answer && quizAnswers[qIndex] !== -1
@@ -509,7 +548,7 @@ export default function TutorialDetailPage() {
             </CardHeader>
             <CardContent className="pt-0">
               <div className="space-y-1">
-                {tutorial.sections.map((section: any, index: number) => (
+                {tutorial.sections.map((section: TutorialSection, index: number) => (
                   <Button
                     key={index}
                     variant={activeSection === index ? "default" : "ghost"}
@@ -549,7 +588,7 @@ export default function TutorialDetailPage() {
               <div className="space-y-2">
                 <h3 className="text-sm font-medium">Resources</h3>
                 <ul className="space-y-1">
-                  {tutorial.resources.map((resource: any, index: number) => (
+                  {tutorial.resources.map((resource: TutorialResource, index: number) => (
                     <li key={index}>
                       <a
                         href={resource.url}
@@ -586,42 +625,11 @@ export default function TutorialDetailPage() {
                 renderQuiz()
               ) : (
                 <div className="space-y-6">
-                  <Tabs defaultValue="content" className="w-full">
-                    <TabsList>
-                      <TabsTrigger value="content">Content</TabsTrigger>
-                      <TabsTrigger value="playground">Try It</TabsTrigger>
-                    </TabsList>
-                    <TabsContent value="content" className="pt-4">
-                      <div className="prose prose-stone dark:prose-invert max-w-none markdown-content">
-                        <ReactMarkdown>
-                          {tutorial.sections[activeSection].content}
-                        </ReactMarkdown>
-                      </div>
-                    </TabsContent>
-                    <TabsContent value="playground" className="pt-4">
-                      <div className="space-y-4">
-                        <div className="bg-muted p-4 rounded-md">
-                          <h3 className="font-medium mb-2">Interactive Code Playground</h3>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Try out the concepts from this lesson in the editor below. Your code will be executed in real-time.
-                          </p>
-                          <div className="border rounded-md h-64 bg-card flex items-center justify-center">
-                            <p className="text-muted-foreground">
-                              Code editor would be integrated here (CodeMirror, Monaco Editor, etc.)
-                            </p>
-                          </div>
-                          <div className="flex justify-end mt-4">
-                            <Button variant="outline" className="mr-2">
-                              <Play className="mr-2 h-4 w-4" /> Run Code
-                            </Button>
-                            <Button variant="outline">
-                              <FileCode className="mr-2 h-4 w-4" /> Reset
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </TabsContent>
-                  </Tabs>
+                  <div className="prose prose-stone dark:prose-invert max-w-none markdown-content">
+                    <ReactMarkdown>
+                      {tutorial.sections[activeSection].content}
+                    </ReactMarkdown>
+                  </div>
 
                   {/* Navigation buttons */}
                   <div className="flex justify-between pt-6">

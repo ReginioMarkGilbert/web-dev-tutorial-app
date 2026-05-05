@@ -2,6 +2,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
+import usePageTitle from "@/hooks/usePageTitle"
 import {
   Select,
   SelectContent,
@@ -13,6 +14,8 @@ import { BookOpen, Code, Database, FileCode, Filter, Layout, Search, Server, Spa
 import { Link } from "react-router-dom"
 
 export default function TutorialsPage() {
+  usePageTitle('Tutorials')
+
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-8 max-w-6xl">
       {/* Header section */}
@@ -80,7 +83,9 @@ export default function TutorialsPage() {
           </div>
         </CardContent>
         <CardFooter>
-          <Button size="lg" className="w-full md:w-auto">Start Learning Path</Button>
+          <Button size="lg" className="w-full md:w-auto" asChild>
+            <Link to="/tutorial/javascript-variables">Start Learning Path</Link>
+          </Button>
         </CardFooter>
       </Card>
 
@@ -88,9 +93,6 @@ export default function TutorialsPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Frontend Development</h2>
-          <Button variant="ghost" size="sm">
-            View All
-          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {frontendTutorials.map((tutorial) => (
@@ -106,9 +108,6 @@ export default function TutorialsPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Backend Development</h2>
-          <Button variant="ghost" size="sm">
-            View All
-          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {backendTutorials.map((tutorial) => (
@@ -124,9 +123,6 @@ export default function TutorialsPage() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-2xl font-bold">Full Stack Development</h2>
-          <Button variant="ghost" size="sm">
-            View All
-          </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {fullstackTutorials.map((tutorial) => (
@@ -156,9 +152,15 @@ export default function TutorialsPage() {
                     <h3 className="font-semibold truncate">{tutorial.title}</h3>
                     <p className="text-sm text-muted-foreground truncate">{tutorial.description}</p>
                   </div>
-                  <Button variant="ghost" size="sm" asChild>
-                    <Link to={tutorial.link}>View</Link>
-                  </Button>
+                  {tutorial.link ? (
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to={tutorial.link}>View</Link>
+                    </Button>
+                  ) : (
+                    <Button variant="ghost" size="sm" disabled>
+                      Coming soon
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -212,11 +214,12 @@ function TutorialCard({ tutorial }: TutorialCardProps) {
         <Button
           className="w-full"
           asChild={!!link}
+          disabled={!link}
         >
           {link ? (
             <Link to={link}>Start Learning</Link>
           ) : (
-            "Start Learning"
+            "Coming Soon"
           )}
         </Button>
       </CardFooter>
@@ -245,7 +248,7 @@ const frontendTutorials: Tutorial[] = [
     duration: '8 hours',
     modules: 12,
     icon: Code,
-    link: '/javascript-fundamentals'
+    link: '/tutorial/javascript-variables'
   },
   {
     id: 'fe2',
@@ -333,32 +336,32 @@ const fullstackTutorials: Tutorial[] = [
 const trendingTutorials = [
   {
     id: 'trend1',
-    title: 'Next.js 14: The Complete Guide',
-    description: 'Master the latest features of Next.js for production-ready React applications',
-    link: '/tutorials/nextjs'
+    title: 'JavaScript Variables and Data Types',
+    description: 'Learn how variables work and how JavaScript represents common data types',
+    link: '/tutorial/javascript-variables'
   },
   {
     id: 'trend2',
-    title: 'Tailwind CSS Mastery',
-    description: 'Become a CSS powerhouse with Tailwind CSS utility-first framework',
-    link: '/tutorials/tailwind'
+    title: 'JavaScript Functions',
+    description: 'Build reusable blocks of JavaScript with declarations, expressions, and arrows',
+    link: '/tutorial/javascript-functions'
   },
   {
     id: 'trend3',
     title: 'React Server Components',
     description: 'Learn how to build efficient React apps with server components',
-    link: '/tutorials/rsc'
+    link: null
   },
   {
     id: 'trend4',
     title: 'GraphQL API Development',
     description: 'Build flexible and powerful APIs with GraphQL',
-    link: '/tutorials/graphql'
+    link: null
   },
   {
     id: 'trend5',
     title: 'Responsive Web Design with CSS Grid',
     description: 'Create modern layouts with CSS Grid Layout',
-    link: '/tutorials/css-grid'
+    link: null
   }
 ]

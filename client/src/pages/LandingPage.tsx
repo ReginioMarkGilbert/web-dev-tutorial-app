@@ -1,18 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import usePageTitle from "@/hooks/usePageTitle";
 import { ArrowRight, BookOpen, Code, Database, Layers, Layout, Terminal, ThumbsUp, Users } from "lucide-react";
-import { useState } from "react";
 import { Link } from "react-router-dom";
 
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState("html-css");
+  usePageTitle();
   const currentYear = new Date().getFullYear();
-
-  // Simple animation for scrolling elements
-  const fadeInUp = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
-  };
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -30,9 +24,9 @@ export default function LandingPage() {
             </div>
             <div className="flex items-center gap-6">
               <nav className="hidden md:flex gap-6 text-left">
-                <a href="#" className="text-sm font-medium hover:text-primary transition-colors">Home</a>
-                <a href="#topics" className="text-sm font-medium hover:text-primary transition-colors">Learning Paths</a>
-                <a href="#testimonials" className="text-sm font-medium hover:text-primary transition-colors">Resources</a>
+                <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">Home</Link>
+                <a href="#learning-paths" className="text-sm font-medium hover:text-primary transition-colors">Learning Paths</a>
+                <Link to="/resources" className="text-sm font-medium hover:text-primary transition-colors">Resources</Link>
               </nav>
               <Button variant="outline" asChild>
                 <Link to="/auth">Sign In</Link>
@@ -111,7 +105,7 @@ export default function LandingPage() {
       </section>
 
       {/* Learning Paths Section */}
-      <section className="w-full py-12 md:py-24 bg-muted">
+      <section id="learning-paths" className="w-full py-12 md:py-24 bg-muted">
         <div className="container px-4 md:px-6 mx-auto">
           <div className="text-center mb-12 space-y-4">
             <h2 className="text-3xl font-bold tracking-tighter">Learning Paths</h2>
@@ -288,63 +282,34 @@ export default function LandingPage() {
       {/* Footer */}
       <footer className="w-full py-6 bg-muted border-t">
         <div className="container px-4 md:px-6 mx-auto">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="space-y-4">
               <h4 className="text-sm font-medium">Platform</h4>
               <ul className="space-y-2 text-sm">
                 <li><Link to="/tutorials" className="hover:underline">Tutorials</Link></li>
                 <li><Link to="/resources" className="hover:underline">Resources</Link></li>
-                <li><Link to="/" className="hover:underline">Blog</Link></li>
+                <li><Link to="/auth" className="hover:underline">Sign In</Link></li>
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="text-sm font-medium">Company</h4>
+              <h4 className="text-sm font-medium">Learning Paths</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/" className="hover:underline">About</Link></li>
-                <li><Link to="/" className="hover:underline">Careers</Link></li>
-                <li><Link to="/" className="hover:underline">Contact</Link></li>
+                <li><a href="#learning-paths" className="hover:underline">Frontend Development</a></li>
+                <li><a href="#learning-paths" className="hover:underline">Full Stack Development</a></li>
+                <li><a href="#learning-paths" className="hover:underline">Backend Development</a></li>
               </ul>
             </div>
             <div className="space-y-4">
-              <h4 className="text-sm font-medium">Legal</h4>
+              <h4 className="text-sm font-medium">Trusted Resources</h4>
               <ul className="space-y-2 text-sm">
-                <li><Link to="/" className="hover:underline">Privacy Policy</Link></li>
-                <li><Link to="/" className="hover:underline">Terms of Service</Link></li>
-                <li><Link to="/" className="hover:underline">Cookie Policy</Link></li>
+                <li><a href="https://developer.mozilla.org/" target="_blank" rel="noopener noreferrer" className="hover:underline">MDN Web Docs</a></li>
+                <li><a href="https://react.dev/" target="_blank" rel="noopener noreferrer" className="hover:underline">React Documentation</a></li>
+                <li><a href="https://www.typescriptlang.org/docs/" target="_blank" rel="noopener noreferrer" className="hover:underline">TypeScript Handbook</a></li>
               </ul>
-            </div>
-            <div className="space-y-4">
-              <h4 className="text-sm font-medium">Connect</h4>
-              <div className="flex space-x-4">
-                <Link to="/" className="text-muted-foreground hover:text-foreground">
-                  <span className="sr-only">Twitter</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                    <path d="M22 4s-.7 2.1-2 3.4c1.6 10-9.4 17.3-18 11.6 2.2.1 4.4-.6 6-2C3 15.5.5 9.6 3 5c2.2 2.6 5.6 4.1 9 4-.9-4.2 4-6.6 7-3.8 1.1 0 3-1.2 3-1.2z"></path>
-                  </svg>
-                </Link>
-                <Link to="/" className="text-muted-foreground hover:text-foreground">
-                  <span className="sr-only">GitHub</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                    <path d="M15 22v-4a4.8 4.8 0 0 0-1-3.5c3 0 6-2 6-5.5.08-1.25-.27-2.48-1-3.5.28-1.15.28-2.35 0-3.5 0 0-1 0-3 1.5-2.64-.5-5.36-.5-8 0C6 2 5 2 5 2c-.3 1.15-.3 2.35 0 3.5A5.403 5.403 0 0 0 4 9c0 3.5 3 5.5 6 5.5-.39.49-.68 1.05-.85 1.65-.17.6-.22 1.23-.15 1.85v4"></path>
-                    <path d="M9 18c-4.51 2-5-2-7-2"></path>
-                  </svg>
-                </Link>
-                <Link to="/" className="text-muted-foreground hover:text-foreground">
-                  <span className="sr-only">Discord</span>
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-5 w-5">
-                    <circle cx="9" cy="12" r="1"></circle>
-                    <circle cx="15" cy="12" r="1"></circle>
-                    <path d="M7.5 7.5c3.5-1 5.5-1 9 0"></path>
-                    <path d="M7 16.5c3.5 1 6.5 1 10 0"></path>
-                    <path d="M15.5 17c0 1 1.5 3 2 3 1.5 0 2.833-1.667 3.5-3 .667-1.667.5-5.833-1.5-11.5-1.457-1.015-3-1.34-4.5-1.5l-1 2.5"></path>
-                    <path d="M8.5 17c0 1-1.356 3-1.832 3-1.429 0-2.698-1.667-3.333-3-.635-1.667-.48-5.833 1.428-11.5C6.151 4.485 7.545 4.16 9 4l1 2.5"></path>
-                  </svg>
-                </Link>
-              </div>
             </div>
           </div>
           <div className="mt-8 border-t pt-8 flex flex-col sm:flex-row justify-between items-center">
-            <p className="text-sm text-muted-foreground">© 2023 Web Dev Tutorials. All rights reserved.</p>
+            <p className="text-sm text-muted-foreground">© {currentYear} Web Dev Tutorials. All rights reserved.</p>
             <div className="flex items-center mt-4 sm:mt-0">
               <BookOpen className="h-5 w-5 mr-2" />
               <p className="text-sm font-medium">Web Dev Tutorials</p>

@@ -21,8 +21,8 @@ interface ChatWindowProps {
 interface CodeProps extends ComponentPropsWithoutRef<"code"> {
    inline?: boolean
    className?: string
-   children: ReactNode
-   node?: any // For compatibility with react-markdown
+   children?: ReactNode
+   node?: unknown
 }
 
 export default function ChatWindow({ onClose }: ChatWindowProps) {
@@ -89,7 +89,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
          <CardHeader className="p-3 border-b flex flex-row items-center justify-between">
             <div className="flex items-center">
                <Avatar className="h-8 w-8 mr-2">
-                  <AvatarImage src="/assistant-avatar.png" />
+                  <AvatarImage src="/assistant-avatar.svg" />
                   <AvatarFallback>AI</AvatarFallback>
                </Avatar>
                <h3 className="font-semibold">Web Dev Assistant</h3>
@@ -120,7 +120,7 @@ export default function ChatWindow({ onClose }: ChatWindowProps) {
                         <div className="markdown-body text-sm bg-transparent">
                            <ReactMarkdown
                               components={{
-                                 code({ node, inline, className, children, ...props }: CodeProps) {
+                                 code({ inline, className, children, ...props }: CodeProps) {
                                     const match = /language-(\w+)/.exec(className || "")
                                     return !inline && match ? (
                                        <SyntaxHighlighter
