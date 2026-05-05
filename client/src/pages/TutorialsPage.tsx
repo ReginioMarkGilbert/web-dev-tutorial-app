@@ -10,11 +10,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { BookOpen, Code, Database, FileCode, Filter, Layout, Search, Server, Sparkles } from "lucide-react"
+import { BookOpen, Code, Database, FileCode, Layout, Search, Server, Sparkles } from "lucide-react"
+import { useMemo, useState } from "react"
 import { Link } from "react-router-dom"
 
 export default function TutorialsPage() {
   usePageTitle('Tutorials')
+  const [query, setQuery] = useState("")
+  const [difficulty, setDifficulty] = useState<TutorialFilter>("all")
+  const filteredFrontendTutorials = useMemo(() => filterTutorials(frontendTutorials, query, difficulty), [query, difficulty])
+  const filteredBackendTutorials = useMemo(() => filterTutorials(backendTutorials, query, difficulty), [query, difficulty])
+  const filteredFullstackTutorials = useMemo(() => filterTutorials(fullstackTutorials, query, difficulty), [query, difficulty])
 
   return (
     <div className="container mx-auto p-4 md:p-6 space-y-8 max-w-6xl">
@@ -33,10 +39,12 @@ export default function TutorialsPage() {
           <Input
             placeholder="Search for tutorials..."
             className="pl-10"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
           />
         </div>
-        <div className="flex items-center gap-2">
-          <Select defaultValue="all">
+        <div>
+          <Select value={difficulty} onValueChange={(value) => setDifficulty(value as TutorialFilter)}>
             <SelectTrigger>
               <SelectValue placeholder="Difficulty" />
             </SelectTrigger>
@@ -47,9 +55,6 @@ export default function TutorialsPage() {
               <SelectItem value="advanced">Advanced</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
         </div>
       </div>
 
@@ -95,13 +100,14 @@ export default function TutorialsPage() {
           <h2 className="text-2xl font-bold">Frontend Development</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {frontendTutorials.map((tutorial) => (
+          {filteredFrontendTutorials.map((tutorial) => (
             <TutorialCard
               key={tutorial.id}
               tutorial={tutorial}
             />
           ))}
         </div>
+        <EmptyTutorials isEmpty={filteredFrontendTutorials.length === 0} />
       </div>
 
       {/* Backend section */}
@@ -110,13 +116,14 @@ export default function TutorialsPage() {
           <h2 className="text-2xl font-bold">Backend Development</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {backendTutorials.map((tutorial) => (
+          {filteredBackendTutorials.map((tutorial) => (
             <TutorialCard
               key={tutorial.id}
               tutorial={tutorial}
             />
           ))}
         </div>
+        <EmptyTutorials isEmpty={filteredBackendTutorials.length === 0} />
       </div>
 
       {/* Full Stack section */}
@@ -125,13 +132,14 @@ export default function TutorialsPage() {
           <h2 className="text-2xl font-bold">Full Stack Development</h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {fullstackTutorials.map((tutorial) => (
+          {filteredFullstackTutorials.map((tutorial) => (
             <TutorialCard
               key={tutorial.id}
               tutorial={tutorial}
             />
           ))}
         </div>
+        <EmptyTutorials isEmpty={filteredFullstackTutorials.length === 0} />
       </div>
 
       {/* Trending tutorials */}
@@ -236,6 +244,35 @@ interface Tutorial {
   modules: number
   icon: React.ComponentType<{ className?: string }>
   link?: string
+}
+
+type TutorialFilter = "all" | "beginner" | "intermediate" | "advanced"
+
+function EmptyTutorials({ isEmpty }: { isEmpty: boolean }) {
+  if (!isEmpty) return null
+
+  return (
+    <Card>
+      <CardContent className="py-8 text-center text-sm text-muted-foreground">
+        No tutorials match the current search and difficulty.
+      </CardContent>
+    </Card>
+  )
+}
+
+function filterTutorials(tutorials: Tutorial[], query: string, difficulty: TutorialFilter) {
+  const normalizedQuery = query.trim().toLowerCase()
+
+  return tutorials.filter((tutorial) => {
+    const matchesDifficulty = difficulty === "all" || tutorial.level.toLowerCase() === difficulty
+    const searchable = [
+      tutorial.title,
+      tutorial.description,
+      tutorial.level
+    ].join(" ").toLowerCase()
+
+    return matchesDifficulty && (!normalizedQuery || searchable.includes(normalizedQuery))
+  })
 }
 
 // Mock data for Frontend tutorials

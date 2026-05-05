@@ -42,7 +42,7 @@ export default function ResourcesPage() {
 
       {/* Resources tabs */}
       <Tabs defaultValue="documentation" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 mb-8">
+        <TabsList className="grid h-auto w-full grid-cols-2 sm:grid-cols-4 mb-8">
           <TabsTrigger value="documentation">Documentation</TabsTrigger>
           <TabsTrigger value="tutorials">Tutorials</TabsTrigger>
           <TabsTrigger value="tools">Tools</TabsTrigger>

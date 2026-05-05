@@ -1,3 +1,5 @@
+import BrandLogo from "@/components/BrandLogo";
+import { ModeToggle } from "@/components/mode-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import usePageTitle from "@/hooks/usePageTitle";
@@ -11,27 +13,22 @@ export default function LandingPage() {
   return (
     <div className="flex flex-col min-h-screen">
       {/* Navbar */}
-      <header className="w-full py-4 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 sticky top-0 z-50">
-        <div className="container mx-auto px-4 md:px-6 max-w-6xl">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
-                <path d="m18.5 8.5-1 1-3-3 1-1a1.41 1.41 0 0 1 2 0l1 1a1.41 1.41 0 0 1 0 2Z" />
-                <path d="m14.5 11.5-6 6v3h3l6-6" />
-                <line x1="3" x2="21" y1="22" y2="22" />
-              </svg>
-              <span className="font-bold text-xl">Web Dev Tutorials</span>
-            </div>
-            <div className="flex items-center gap-6">
-              <nav className="hidden md:flex gap-6 text-left">
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6 max-w-6xl">
+          <div className="flex items-center">
+            <BrandLogo />
+            <nav className="hidden md:flex items-center gap-6 text-sm">
                 <Link to="/" className="text-sm font-medium hover:text-primary transition-colors">Home</Link>
                 <a href="#learning-paths" className="text-sm font-medium hover:text-primary transition-colors">Learning Paths</a>
+                <Link to="/tutorials" className="text-sm font-medium hover:text-primary transition-colors">Tutorials</Link>
                 <Link to="/resources" className="text-sm font-medium hover:text-primary transition-colors">Resources</Link>
-              </nav>
-              <Button variant="outline" asChild>
-                <Link to="/auth">Sign In</Link>
-              </Button>
-            </div>
+            </nav>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link to="/auth">Sign In</Link>
+            </Button>
+            <ModeToggle />
           </div>
         </div>
       </header>
@@ -72,8 +69,8 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             <FeatureCard
               icon={<Code className="h-8 w-8" />}
-              title="Interactive Tutorials"
-              description="Learn by doing with hands-on coding exercises and real-time feedback."
+              title="Guided Lessons"
+              description="Learn core concepts through focused lessons, examples, and knowledge checks."
             />
             <FeatureCard
               icon={<Layers className="h-8 w-8" />}
